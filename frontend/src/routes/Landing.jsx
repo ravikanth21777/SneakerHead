@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
+import Navbar from '../components/Navbar';
 
 const dummySneakers = [
   {
@@ -34,18 +35,6 @@ const dummySneakers = [
   }
 ];
 
-const brands = [
-  { name: "Adidas", count: 230 },
-  { name: "Amiri", count: 9 },
-  { name: "ASICS", count: 148 },
-  { name: "Balenciaga", count: 7 },
-  { name: "BAPE", count: 5 },
-  { name: "Cactus Jack", count: 4 },
-  { name: "Converse", count: 13 },
-  { name: "Crocs", count: 37 },
-  { name: "Dolce & Gabbana", count: 6 }
-];
-
 const fadeInUp = {
   initial: { y: 60, opacity: 0 },
   animate: { y: 0, opacity: 1 },
@@ -70,74 +59,7 @@ const Landing = () => {
       transition={{ duration: 0.6 }}
       style={{ minHeight: "100vh", background: "#ffffff" }}
     >
-      {/* Navigation */}
-      <motion.nav
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        style={{ 
-          padding: "1rem 2rem", 
-          borderBottom: "1px solid #eee",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "#fff",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000
-        }}
-      >
-        <motion.h1 
-          whileHover={{ scale: 1.05 }}
-          style={{ margin: 0, fontWeight: "bold", fontSize: "1.5rem" }}
-        >
-          HYPE FLY India
-        </motion.h1>
-        <motion.div 
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-          style={{ 
-            display: "flex", 
-            gap: "2rem",
-            alignItems: "center",
-            fontSize: "0.9rem",
-            fontWeight: "500"
-          }}
-        >
-          {/* Menu items with hover effect */}
-          <motion.span 
-            whileHover={{ scale: 1.1 }} 
-            style={{ color: "#ff4444" }}
-          >
-            INSTANT SHIP
-          </motion.span>
-          {["Sneakers", "Running", "Streetwear", "Activewear", "Stanley", "Labubu", "Accessories"].map(item => (
-            <motion.span
-              key={item}
-              whileHover={{ scale: 1.1 }}
-            >
-              {item}
-            </motion.span>
-          ))}
-        </motion.div>
-        <motion.div 
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-          style={{ display: "flex", gap: "1.5rem", alignItems: "center" }}
-        >
-          {["🔍", "👤", "🛒"].map(icon => (
-            <motion.span
-              key={icon}
-              whileHover={{ scale: 1.2, rotate: 5 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              {icon}
-            </motion.span>
-          ))}
-        </motion.div>
-      </motion.nav>
+      <Navbar />
 
       {/* Breadcrumb with fade */}
       <motion.div 
@@ -189,47 +111,6 @@ const Landing = () => {
         animate="animate"
         style={{ padding: "2rem" }}
       >
-        {/* Filters */}
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          style={{ 
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "1rem",
-            padding: "1rem",
-            marginBottom: "2rem",
-            background: "#f8f8f8",
-            borderRadius: "8px"
-          }}
-        >
-          {brands.map(brand => (
-            <motion.label
-              key={brand.name}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              style={{ 
-                display: "flex", 
-                alignItems: "center", 
-                gap: "0.5rem",
-                padding: "0.5rem 1rem",
-                background: selectedBrand === brand.name.toLowerCase() ? "#fff" : "transparent",
-                borderRadius: "4px",
-                cursor: "pointer",
-                boxShadow: selectedBrand === brand.name.toLowerCase() ? "0 2px 4px rgba(0,0,0,0.1)" : "none"
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={selectedBrand === brand.name.toLowerCase()}
-                onChange={() => setSelectedBrand(brand.name.toLowerCase())}
-              />
-              <span style={{ fontSize: "0.9rem" }}>{brand.name} ({brand.count})</span>
-            </motion.label>
-          ))}
-        </motion.div>
-
         {/* Products Grid with stagger effect */}
         <motion.div 
           variants={staggerContainer}

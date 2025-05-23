@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-
+// on hover give other view of the product
 const ProductCard = ({ product }) => {
   return (
     <motion.div
