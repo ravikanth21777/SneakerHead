@@ -1604,7 +1604,7 @@
 
 "@react-three/drei@^10.0.8":
   version "10.0.8"
-  resolved "https://registry.yarnpkg.com/@react-three/drei/-/drei-10.0.8.tgz#c1fdbd32e22e878e5f49566d86ecd949e268e65b"
+  resolved "https://registry.npmjs.org/@react-three/drei/-/drei-10.0.8.tgz"
   integrity sha512-ZE9LgtzMWutpfwrUYFM//kdInzkzWT/3keHdqNQ2s/+IBEuNHPII4QJTS6e8Ko2uYdL/mPeCRFcmEKFUNFrhBQ==
   dependencies:
     "@babel/runtime" "^7.26.0"
@@ -1631,7 +1631,7 @@
 
 "@react-three/fiber@^9.1.2":
   version "9.1.2"
-  resolved "https://registry.yarnpkg.com/@react-three/fiber/-/fiber-9.1.2.tgz#c988f3aa916f64771483784ca3bb6ba4b116395e"
+  resolved "https://registry.npmjs.org/@react-three/fiber/-/fiber-9.1.2.tgz"
   integrity sha512-k8FR9yVHV9kIF3iuOD0ds5hVymXYXfgdKklqziBVod9ZEJ8uk05Zjw29J/omU3IKeUfLNAIHfxneN3TUYM4I2w==
   dependencies:
     "@babel/runtime" "^7.17.8"
@@ -4848,7 +4848,7 @@ fraction.js@^4.3.7:
 
 framer-motion@^12.12.1:
   version "12.12.1"
-  resolved "https://registry.yarnpkg.com/framer-motion/-/framer-motion-12.12.1.tgz#b756079cc050be7fa6ae0d093ab0903fd3f15ca1"
+  resolved "https://registry.npmjs.org/framer-motion/-/framer-motion-12.12.1.tgz"
   integrity sha512-PFw4/GCREHI2suK/NlPSUxd+x6Rkp80uQsfCRFSOQNrm5pZif7eGtmG1VaD/UF1fW9tRBy5AaS77StatB3OJDg==
   dependencies:
     motion-dom "^12.12.1"
@@ -6764,14 +6764,14 @@ mkdirp@~0.5.1:
 
 motion-dom@^12.12.1:
   version "12.12.1"
-  resolved "https://registry.yarnpkg.com/motion-dom/-/motion-dom-12.12.1.tgz#12f50c778ca295de337e28f3b4937da86e9098ea"
+  resolved "https://registry.npmjs.org/motion-dom/-/motion-dom-12.12.1.tgz"
   integrity sha512-GXq/uUbZBEiFFE+K1Z/sxdPdadMdfJ/jmBALDfIuHGi0NmtealLOfH9FqT+6aNPgVx8ilq0DtYmyQlo6Uj9LKQ==
   dependencies:
     motion-utils "^12.12.1"
 
 motion-utils@^12.12.1:
   version "12.12.1"
-  resolved "https://registry.yarnpkg.com/motion-utils/-/motion-utils-12.12.1.tgz#63e28751325cb9d1cd684f3c273a570022b0010e"
+  resolved "https://registry.npmjs.org/motion-utils/-/motion-utils-12.12.1.tgz"
   integrity sha512-f9qiqUHm7hWSLlNW8gS9pisnsN7CRFRD58vNjptKdsqFLpkVnX00TNeD6Q0d27V9KzT7ySFyK1TZ/DShfVOv6w==
 
 ms@2.0.0:
@@ -9263,7 +9263,7 @@ three@^0.170.0:
 
 three@^0.176.0:
   version "0.176.0"
-  resolved "https://registry.yarnpkg.com/three/-/three-0.176.0.tgz#a30c1974e46db5745e4f96dd9ee2028d71e16ecf"
+  resolved "https://registry.npmjs.org/three/-/three-0.176.0.tgz"
   integrity sha512-PWRKYWQo23ojf9oZSlRGH8K09q7nRSWx6LY/HF/UUrMdYgN9i1e2OwJYHoQjwc6HF/4lvvYLC5YC1X8UJL2ZpA==
 
 throat@^6.0.1:
