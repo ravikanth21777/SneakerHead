@@ -2,15 +2,10 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const brands = [
-  { name: "Adidas", count: 230 },
-  { name: "Amiri", count: 9 },
-  { name: "ASICS", count: 148 },
-  { name: "Balenciaga", count: 7 },
-  { name: "BAPE", count: 5 },
-  { name: "Cactus Jack", count: 4 },
-  { name: "Converse", count: 13 },
-  { name: "Crocs", count: 37 },
-  { name: "Dolce & Gabbana", count: 6 }
+  { name: "Adidas", count: 4 },
+  { name: "Nike", count: 1 },
+  { name: "ASICS", count: 1 },
+  { name: "Puma", count: 1 }
 ];
 
 const staggerContainer = {
@@ -21,10 +16,15 @@ const staggerContainer = {
   }
 };
 
-const Navbar = () => {
+const Navbar = ({ onBrandSelect }) => {
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Update parent component when selected brands change
+  useEffect(() => {
+    onBrandSelect(selectedBrands);
+  }, [selectedBrands, onBrandSelect]);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
 
@@ -46,6 +46,8 @@ const Navbar = () => {
         ? prev.filter(b => b !== brandName)
         : [...prev, brandName]
     );
+    // Close the dropdown when a brand is selected
+    setIsSearchFocused(false);
   };
 
   return (

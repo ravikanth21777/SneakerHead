@@ -45,14 +45,28 @@ const ProductCard = ({ product }) => {
       </div>
       
       <div style={{ padding: "1rem" }}>
-        <h3 style={{ 
-          margin: "0 0 0.5rem 0", 
-          fontSize: "0.9rem",
-          fontWeight: "500",
-          color: "#333"
-        }}>
-          {product.name}
-        </h3>
+        <div style={{ marginBottom: "0.5rem" }}>
+          <span style={{
+            display: "inline-block",
+            padding: "0.2rem 0.5rem",
+            backgroundColor: "#f0f0f0",
+            borderRadius: "4px",
+            fontSize: "0.7rem",
+            fontWeight: "600",
+            color: "#666",
+            marginBottom: "0.5rem"
+          }}>
+            {product.brand}
+          </span>
+          <h3 style={{ 
+            margin: "0",
+            fontSize: "0.9rem",
+            fontWeight: "500",
+            color: "#333"
+          }}>
+            {product.name}
+          </h3>
+        </div>
         
         <div style={{ 
           display: "flex", 
