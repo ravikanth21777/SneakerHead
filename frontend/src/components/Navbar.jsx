@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
 
 const brands = [
@@ -24,10 +25,13 @@ const Navbar = ({ onBrandSelect }) => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const searchRef = useRef(null);
   const dropdownRef = useRef(null);
+  const navigate = useNavigate();
 
   // Update parent component when selected brands change
   useEffect(() => {
-    onBrandSelect(selectedBrands);
+    if (onBrandSelect) {
+      onBrandSelect(selectedBrands);
+    }
   }, [selectedBrands, onBrandSelect]);
 
   useEffect(() => {
@@ -48,8 +52,21 @@ const Navbar = ({ onBrandSelect }) => {
         ? prev.filter(b => b !== brandName)
         : [...prev, brandName]
     );
-    // Close the dropdown when a brand is selected
     setIsSearchFocused(false);
+  };
+
+  const handleProfileClick = () => {
+    // Check if user is authenticated
+    const isAuthenticated = false; // TODO: Implement actual auth check
+    if (isAuthenticated) {
+      navigate('/profile');
+    } else {
+      setIsAuthModalOpen(true);
+    }
+  };
+
+  const handleLogoClick = () => {
+    navigate('/');
   };
 
   return (
@@ -73,31 +90,17 @@ const Navbar = ({ onBrandSelect }) => {
       >
         <motion.h1 
           whileHover={{ scale: 1.05 }}
-          style={{ margin: 0, fontWeight: "bold", fontSize: "1.5rem", flex: '0 0 auto' }}
+          style={{ 
+            margin: 0, 
+            fontWeight: "bold", 
+            fontSize: "1.5rem", 
+            flex: '0 0 auto',
+            cursor: 'pointer' 
+          }}
+          onClick={handleLogoClick}
         >
           SneakerHead
         </motion.h1>
-
-        {/* Gallery Icon */}
-        <motion.span
-          whileHover={{ scale: 1.2 }}
-          whileTap={{ scale: 0.95 }}
-          style={{ 
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            backgroundColor: '#f8f8f8',
-            padding: '0.5rem 1rem',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            color: '#333',
-            flex: '0 0 auto'
-          }}
-        >
-          <span style={{ fontSize: '1.2rem' }}>🖼️</span>
-          Gallery
-        </motion.span>
 
         {/* Search Bar */}
         <div style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }} ref={searchRef}>
@@ -208,13 +211,14 @@ const Navbar = ({ onBrandSelect }) => {
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             style={{ cursor: 'pointer' }}
-            onClick={() => setIsAuthModalOpen(true)}
+            onClick={handleProfileClick}
           >
             👤
           </motion.span>
           <motion.span
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
+            style={{ cursor: 'pointer' }}
           >
             🛒
           </motion.span>
