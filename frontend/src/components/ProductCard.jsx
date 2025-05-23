@@ -1,9 +1,20 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-// on hover give other view of the product
+import { useNavigate } from 'react-router-dom';
+
 const ProductCard = ({ product }) => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (e) => {
+    // Prevent navigation if clicking the Add to Cart button
+    if (!e.target.closest('button')) {
+      navigate(`/product/${product.id}`);
+    }
+  };
+
   return (
     <motion.div
+      onClick={handleCardClick}
       variants={{
         hidden: { y: 20, opacity: 0 },
         visible: { y: 0, opacity: 1 }

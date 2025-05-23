@@ -1,9 +1,39 @@
-const sizes = ['UK 6', 'UK 6.5', 'UK 7', 'UK 7.5', 'UK 8', 'UK 8.5', 'UK 9', 'UK 9.5', 'UK 10', 'UK 10.5', 'UK 11'];import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Heart, Share2, Clock, Users, Shield, Info, ChevronLeft, ChevronRight } from 'lucide-react';
 
-const SneakerAuctionPage = () => {
+const DUMMY_SNEAKERS = [
+  {
+    id: "adidas_samba_1",
+    name: "Lionel Messi X Samba 'Inter Miami CF - Away Kit'",
+    price: 10799,
+    brand: "Adidas",
+    model: "Samba OG",
+    colorway: "Core Black/Cloud White",
+    releaseDate: "2024",
+    condition: "New",
+    baseBid: 10799,
+    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/c06b24af87e744aa9e2daf8b00836bb7_9366/Samba_OG_Shoes_Black_ID2045_01_standard.jpg",
+    auctionStart: '2024-05-21 10:00:00',
+    auctionEnd: '2024-05-25 18:00:00',
+    seller: 'SneakerVault_Official',
+    sellerRating: 4.9,
+    authenticity: 'Verified Authentic'
+  }
+];
+
+const ProductDescription = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  // Product loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [productData, setProductData] = useState(null);
+  const [images, setImages] = useState([]);
+  
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const shoeSize = 'UK 7.5';
+  const [shoeSize, setShoeSize] = useState('UK 7.5');
   const [bidAmount, setBidAmount] = useState('');
   const [currentBid, setCurrentBid] = useState(20099);
   const [timeLeft, setTimeLeft] = useState({
@@ -16,31 +46,31 @@ const SneakerAuctionPage = () => {
   const [totalBids, setTotalBids] = useState(47);
   const [watchers, setWatchers] = useState(128);
 
-  // Sample product data
-  const product = {
-    brand: 'New Balance',
-    name: '9060 \'Black Cat\'',
-    model: 'U9060BLK',
-    colorway: 'Black/Grey',
-    releaseDate: '2024',
-    condition: 'New',
-    baseBid: 15000,
-    auctionStart: '2024-05-21 10:00:00',
-    auctionEnd: '2024-05-25 18:00:00',
-    seller: 'SneakerVault_Official',
-    sellerRating: 4.9,
-    authenticity: 'Verified Authentic'
-  };
+  // Effect to fetch product data
+  useEffect(() => {
+    const fetchProduct = () => {
+      setIsLoading(true);
+      try {
+        // In a real app, this would be an API call
+        const foundProduct = DUMMY_SNEAKERS.find(p => p.id === id);
+        if (!foundProduct) {
+          throw new Error('Product not found');
+        }
 
-  const images = [
-    '/api/placeholder/600/600', // Front view
-    '/api/placeholder/600/600', // Side view
-    '/api/placeholder/600/600', // Back view
-    '/api/placeholder/600/600', // Top view
-    '/api/placeholder/600/600'  // Sole view
-  ];
+        setProductData(foundProduct);
+        setCurrentBid(foundProduct.baseBid);
+        // Set product images (using the same image for all views for now)
+        const productImages = Array(5).fill(foundProduct.image);
+        setImages(productImages);
+        setIsLoading(false);
+      } catch (err) {
+        setError(err.message);
+        setIsLoading(false);
+      }
+    };
 
-  const sizes = ['UK 6', 'UK 6.5', 'UK 7', 'UK 7.5', 'UK 8', 'UK 8.5', 'UK 9', 'UK 9.5', 'UK 10', 'UK 10.5', 'UK 11'];
+    fetchProduct();
+  }, [id]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -68,7 +98,6 @@ const SneakerAuctionPage = () => {
       setCurrentBid(bid);
       setTotalBids(prev => prev + 1);
       setBidAmount('');
-      // Show success message or animation here
     }
   };
 
@@ -84,170 +113,206 @@ const SneakerAuctionPage = () => {
     return `₹${price.toLocaleString('en-IN')}`;
   };
 
+  // Loading and error states
+  if (isLoading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>
+          <h2>Error: {error}</h2>
+          <button 
+            onClick={() => navigate('/')}
+            style={{ 
+              padding: '0.5rem 1rem', 
+              background: '#333', 
+              color: '#fff', 
+              borderRadius: '0.5rem', 
+              marginTop: '1rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Return to Home
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!productData || images.length === 0) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: '100vh', background: '#f8f8f8' }}>
       {/* Breadcrumb */}
-      <div className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 py-3">
-          <nav className="text-sm text-gray-600">
-            <span>Home</span> / <span>Auctions</span> / <span>New Balance</span> / 
-            <span className="text-gray-900 font-medium"> 9060 'Black Cat'</span>
+      <div style={{ background: '#fff', borderBottom: '1px solid #eee' }}>
+        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0.75rem 1rem' }}>
+          <nav style={{ fontSize: '0.875rem', color: '#666' }}>
+            <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Home</span>
+            <span> / </span>
+            <span>Auctions</span>
+            <span> / </span>
+            <span>{productData.brand}</span>
+            <span> / </span>
+            <span style={{ color: '#333', fontWeight: '500' }}>{productData.name}</span>
           </nav>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', '@media (min-width: 768px)': { gridTemplateColumns: '1fr 1fr' } }}>
           {/* Image Gallery */}
-          <div className="space-y-4">
-            <div className="relative bg-white rounded-lg overflow-hidden shadow-lg">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
               <img 
                 src={images[currentImageIndex]} 
-                alt={`${product.brand} ${product.name}`}
-                className="w-full h-96 object-cover"
+                alt={`${productData.brand} ${productData.name}`}
+                style={{ width: '100%', height: '24rem', objectFit: 'cover' }}
               />
               <button 
                 onClick={prevImage}
-                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%', padding: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s' }}
               >
                 <ChevronLeft className="w-5 h-5" />
               </button>
               <button 
                 onClick={nextImage}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 hover:bg-white rounded-full p-2 shadow-lg transition-all"
+                style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', background: 'rgba(255, 255, 255, 0.8)', borderRadius: '50%', padding: '0.5rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)', transition: 'all 0.3s' }}
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
-              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
+              <div style={{ position: 'absolute', bottom: '1rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.5rem' }}>
                 {images.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === currentImageIndex ? 'bg-black' : 'bg-gray-300'
-                    }`}
+                    style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: index === currentImageIndex ? '#333' : '#ccc', transition: 'background 0.3s' }}
                   />
                 ))}
               </div>
             </div>
             
             {/* Thumbnail Images */}
-            <div className="grid grid-cols-5 gap-2">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
               {images.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                    index === currentImageIndex ? 'border-black' : 'border-gray-200'
-                  }`}
+                  style={{ aspectRatio: '1 / 1', borderRadius: '0.5rem', overflow: 'hidden', border: index === currentImageIndex ? '2px solid #333' : '2px solid #ccc', transition: 'border 0.3s' }}
                 >
-                  <img src={img} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
+                  <img src={img} alt={`View ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </button>
               ))}
             </div>
           </div>
 
           {/* Product Details */}
-          <div className="space-y-6">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Header */}
             <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-lg font-semibold text-gray-600">{product.brand}</span>
-                <div className="flex items-center space-x-2">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#666' }}>{productData.brand}</span>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
                   <button 
                     onClick={() => setIsWatchlisted(!isWatchlisted)}
-                    className={`p-2 rounded-full border transition-all ${
-                      isWatchlisted ? 'bg-red-50 border-red-200 text-red-500' : 'bg-white border-gray-200 text-gray-400'
-                    }`}
+                    style={{ padding: '0.5rem', borderRadius: '50%', border: '1px solid #ccc', background: isWatchlisted ? 'rgba(255, 0, 0, 0.1)' : '#fff', color: isWatchlisted ? '#ff0000' : '#666', transition: 'all 0.3s' }}
                   >
                     <Heart className={`w-5 h-5 ${isWatchlisted ? 'fill-current' : ''}`} />
                   </button>
-                  <button className="p-2 rounded-full border bg-white border-gray-200 text-gray-400 hover:text-gray-600">
+                  <button style={{ padding: '0.5rem', borderRadius: '50%', border: '1px solid #ccc', background: '#fff', color: '#666', transition: 'all 0.3s' }}>
                     <Share2 className="w-5 h-5" />
                   </button>
                 </div>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">{product.name}</h1>
-              <div className="flex items-center space-x-4 text-sm text-gray-600">
-                <span>Model: {product.model}</span>
+              <h1 style={{ fontSize: '2rem', fontWeight: '700', color: '#333', marginBottom: '0.5rem' }}>{productData.name}</h1>
+              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#666' }}>
+                <span>Model: {productData.model}</span>
                 <span>•</span>
-                <span>Colorway: {product.colorway}</span>
+                <span>Colorway: {productData.colorway}</span>
                 <span>•</span>
-                <span>Release: {product.releaseDate}</span>
+                <span>Release: {productData.releaseDate}</span>
               </div>
             </div>
 
             {/* Authenticity Badge */}
-            <div className="flex items-center bg-green-50 border border-green-200 rounded-lg p-3">
-              <Shield className="w-5 h-5 text-green-600 mr-2" />
-              <span className="text-green-800 font-medium">{product.authenticity}</span>
-              <span className="text-green-600 ml-2">Condition: {product.condition}</span>
+            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(72, 187, 120, 0.1)', border: '1px solid rgba(72, 187, 120, 0.3)', borderRadius: '0.5rem', padding: '0.75rem', gap: '0.5rem' }}>
+              <Shield className="w-5 h-5 text-green-600" />
+              <span style={{ fontWeight: '500', color: '#48bb78' }}>{productData.authenticity}</span>
+              <span style={{ color: '#48bb78' }}>Condition: {productData.condition}</span>
             </div>
 
             {/* Auction Timer */}
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center mb-2">
+            <div style={{ background: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)', borderRadius: '0.5rem', padding: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
                 <Clock className="w-5 h-5 text-red-600 mr-2" />
-                <span className="text-red-800 font-semibold">Auction Ending Soon</span>
+                <span style={{ fontWeight: '600', color: '#c53030' }}>Auction Ending Soon</span>
               </div>
-              <div className="grid grid-cols-4 gap-2 text-center">
-                <div className="bg-white rounded-lg p-2">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.days}</div>
-                  <div className="text-xs text-gray-600">Days</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.days}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Days</div>
                 </div>
-                <div className="bg-white rounded-lg p-2">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.hours}</div>
-                  <div className="text-xs text-gray-600">Hours</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.hours}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Hours</div>
                 </div>
-                <div className="bg-white rounded-lg p-2">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.minutes}</div>
-                  <div className="text-xs text-gray-600">Minutes</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.minutes}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Minutes</div>
                 </div>
-                <div className="bg-white rounded-lg p-2">
-                  <div className="text-2xl font-bold text-red-600">{timeLeft.seconds}</div>
-                  <div className="text-xs text-gray-600">Seconds</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.seconds}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Seconds</div>
                 </div>
               </div>
             </div>
 
             {/* Current Bid */}
-            <div className="bg-white border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-4">
+            <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '0.5rem', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
                 <div>
-                  <div className="text-sm text-gray-600">Current Bid</div>
-                  <div className="text-3xl font-bold text-gray-900">{formatPrice(currentBid)}</div>
-                  <div className="text-sm text-gray-600">Starting bid: {formatPrice(product.baseBid)}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Current Bid</div>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#333' }}>{formatPrice(currentBid)}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Starting bid: {formatPrice(productData.baseBid)}</div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center text-sm text-gray-600 mb-1">
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
                     <Users className="w-4 h-4 mr-1" />
                     {totalBids} bids
                   </div>
-                  <div className="text-sm text-gray-600">{watchers} watching</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>{watchers} watching</div>
                 </div>
               </div>
 
               {/* Bid Form */}
-              <div className="space-y-4">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
-                  <div className="block text-sm font-medium text-gray-700 mb-2">Your Bid Amount</div>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₹</span>
+                  <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#333', marginBottom: '0.5rem' }}>Your Bid Amount</div>
+                  <div style={{ position: 'relative' }}>
+                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>₹</span>
                     <input
                       type="text"
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       placeholder={`Minimum ${formatPrice(currentBid + 500)}`}
-                      className="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
+                      style={{ width: '100%', padding: '0.75rem 1rem', paddingLeft: '2.5rem', border: '1px solid #ccc', borderRadius: '0.5rem', fontSize: '1rem', color: '#333', transition: 'border-color 0.3s' }}
                     />
                   </div>
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
                     Minimum increment: ₹500
                   </div>
                 </div>
                 <button
                   onClick={handleBidSubmit}
-                  className="w-full bg-black text-white py-3 rounded-lg font-semibold hover:bg-gray-800 transition-colors"
+                  style={{ background: '#333', color: '#fff', padding: '0.75rem', borderRadius: '0.5rem', fontWeight: '600', cursor: 'pointer', transition: 'background 0.3s' }}
                 >
                   Place Bid
                 </button>
@@ -255,50 +320,50 @@ const SneakerAuctionPage = () => {
             </div>
 
             {/* Size Display */}
-            <div className="bg-white border rounded-lg p-4">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold">Size</h3>
-                <button className="text-sm text-blue-600 hover:underline">Size Guide</button>
+            <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '0.5rem', padding: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h3 style={{ fontWeight: '600', color: '#333' }}>Size</h3>
+                <button style={{ fontSize: '0.875rem', color: '#3182ce', cursor: 'pointer', background: 'none', border: 'none', padding: 0, margin: 0 }}>Size Guide</button>
               </div>
-              <div className="bg-gray-100 border border-gray-300 rounded-lg py-3 px-4 text-center">
-                <span className="text-xl font-bold text-gray-900">{shoeSize}</span>
+              <div style={{ background: '#f7fafc', border: '1px solid #cbd5e0', borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
+                <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#333' }}>{shoeSize}</span>
               </div>
-              <div className="mt-3 text-sm text-gray-600">
+              <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
                 <Info className="w-4 h-4 inline mr-1" />
                 Fits True to Size - Recommended to go with your true size
               </div>
             </div>
 
             {/* Seller Information */}
-            <div className="bg-white border rounded-lg p-4">
-              <h3 className="font-semibold mb-3">Seller Information</h3>
-              <div className="flex items-center justify-between">
+            <div style={{ background: '#fff', border: '1px solid #eee', borderRadius: '0.5rem', padding: '1rem' }}>
+              <h3 style={{ fontWeight: '600', marginBottom: '1rem' }}>Seller Information</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <div className="font-medium">{product.seller}</div>
-                  <div className="text-sm text-gray-600">Rating: {product.sellerRating}/5.0</div>
+                  <div style={{ fontWeight: '500', color: '#333' }}>{productData.seller}</div>
+                  <div style={{ fontSize: '0.875rem', color: '#666' }}>Rating: {productData.sellerRating}/5.0</div>
                 </div>
-                <button className="text-blue-600 hover:underline text-sm">View Profile</button>
+                <button style={{ fontSize: '0.875rem', color: '#3182ce', cursor: 'pointer', background: 'none', border: 'none', padding: 0, margin: 0 }}>View Profile</button>
               </div>
             </div>
 
             {/* Auction Details */}
-            <div className="bg-gray-50 border rounded-lg p-4">
-              <h3 className="font-semibold mb-3">Auction Details</h3>
-              <div className="text-sm space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Auction Started:</span>
+            <div style={{ background: '#f7fafc', border: '1px solid #cbd5e0', borderRadius: '0.5rem', padding: '1rem' }}>
+              <h3 style={{ fontWeight: '600', marginBottom: '1rem' }}>Auction Details</h3>
+              <div style={{ fontSize: '0.875rem', color: '#666', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Auction Started:</span>
                   <span>May 21, 2024 at 10:00 AM</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Auction Ends:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Auction Ends:</span>
                   <span>May 25, 2024 at 6:00 PM</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Starting Bid:</span>
-                  <span>{formatPrice(product.baseBid)}</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Starting Bid:</span>
+                  <span>{formatPrice(productData.baseBid)}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Reserve Price:</span>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Reserve Price:</span>
                   <span>Not Met</span>
                 </div>
               </div>
@@ -310,4 +375,4 @@ const SneakerAuctionPage = () => {
   );
 };
 
-export default SneakerAuctionPage;
+export default ProductDescription;
