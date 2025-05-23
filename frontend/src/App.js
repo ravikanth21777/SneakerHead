@@ -2,14 +2,14 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./routes/Landing";
-// import other pages as you build them
+import Profile from "./routes/Profile";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Landing />} />
-        {/* Add other routes here */}
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </Router>
   );
