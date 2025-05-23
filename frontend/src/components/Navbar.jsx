@@ -73,6 +73,27 @@ const Navbar = () => {
         SneakerHead
       </motion.h1>
 
+      {/* Gallery Icon */}
+      <motion.span
+        whileHover={{ scale: 1.2 }}
+        whileTap={{ scale: 0.95 }}
+        style={{ 
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          backgroundColor: '#f8f8f8',
+          padding: '0.5rem 1rem',
+          borderRadius: '8px',
+          fontSize: '0.9rem',
+          color: '#333',
+          flex: '0 0 auto'
+        }}
+      >
+        <span style={{ fontSize: '1.2rem' }}>🖼️</span>
+        Gallery
+      </motion.span>
+
       {/* Search Bar */}
       <div style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }} ref={searchRef}>
         <motion.div 
