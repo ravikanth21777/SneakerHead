@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
+import Navbar from '../components/Navbar';
 import { ChevronLeft, ChevronRight, Heart, Share2, Clock, Users, Info } from 'lucide-react';
 
 const DUMMY_SNEAKERS = [

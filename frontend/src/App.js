@@ -3,7 +3,7 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./routes/Landing";
 import Profile from "./routes/Profile";
-import ProductDescription from "./components/ProductDescription";
+import ProductDescription from "./routes/ProductDescription";
 import ListItemAuction from "./routes/ListItemAuction";
 
 function App() {
