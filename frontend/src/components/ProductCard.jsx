@@ -6,7 +6,7 @@ const ProductCard = ({ product }) => {
   const navigate = useNavigate();
 
   const handleCardClick = (e) => {
-    // Prevent navigation if clicking the Add to Cart button
+    // Prevent navigation if clicking the Bid button
     if (!e.target.closest('button')) {
       navigate(`/product/${product.id}`);
     }
@@ -40,8 +40,8 @@ const ProductCard = ({ product }) => {
         overflow: "hidden"
       }}>
         <motion.img 
-          src={product.image} 
-          alt={product.name}
+          src={product.image || "https://via.placeholder.com/150"} 
+          alt={product.name || "Product Image"}
           style={{
             position: "absolute",
             top: 0,
@@ -67,7 +67,7 @@ const ProductCard = ({ product }) => {
             color: "#666",
             marginBottom: "0.5rem"
           }}>
-            {product.brand}
+            {product.brand || "Brand Name"}
           </span>
           <h3 style={{ 
             margin: "0",
@@ -75,25 +75,49 @@ const ProductCard = ({ product }) => {
             fontWeight: "500",
             color: "#333"
           }}>
-            {product.name}
+            {product.name || "Model Name"}
           </h3>
         </div>
         
         <div style={{ 
           display: "flex", 
-          justifyContent: "space-between",
-          alignItems: "center"
+          flexDirection: "column",
+          gap: "0.5rem",
+          marginBottom: "0.5rem"
         }}>
           <p style={{ 
             margin: 0,
-            fontSize: "1rem",
+            fontSize: "0.9rem",
             color: "#666",
+            fontWeight: "500"
+          }}>
+            Current Bid: ₹{product.currentBid || "0"}
+          </p>
+          <p style={{ 
+            margin: 0,
+            fontSize: "0.9rem",
+            color: "#666",
+            fontWeight: "500"
+          }}>
+            Base Price: ₹{product.basePrice || "0"}
+          </p>
+          <p style={{ 
+            margin: 0,
+            fontSize: "0.9rem",
+            color: "#ff4444",
             fontWeight: "600"
           }}>
-            from ₹{product.price}
+            Time Left: {product.timeLeft || "N/A"}
           </p>
-          
+        </div>
+        
+        <div style={{ 
+          display: "flex", 
+          justifyContent: "flex-end",
+          alignItems: "center"
+        }}>
           <motion.button
+            onClick={() => navigate(`/product/${product.id}`)}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             style={{
@@ -107,7 +131,7 @@ const ProductCard = ({ product }) => {
               fontWeight: "500"
             }}
           >
-            Add to Cart
+            Bid
           </motion.button>
         </div>
       </div>
