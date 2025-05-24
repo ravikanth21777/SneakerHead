@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
 
 const conditions = ["New with Box", "New without Box", "Used - Like New", "Used - Good", "Used - Fair"];
 const categories = ["Sneakers", "Limited Edition", "Collaboration", "Vintage", "Custom"];
@@ -9,24 +10,6 @@ const styles = {
   container: {
     minHeight: '100vh',
     background: '#f8f8f8'
-  },
-  breadcrumb: {
-    background: '#fff',
-    borderBottom: '1px solid #eee',
-    padding: '0.75rem 0'
-  },
-  breadcrumbInner: {
-    maxWidth: '1200px',
-    margin: '0 auto',
-    padding: '0 1rem'
-  },
-  breadcrumbText: {
-    fontSize: '0.875rem',
-    color: '#666'
-  },
-  breadcrumbLink: {
-    cursor: 'pointer',
-    color: '#EF4444'
   },
   mainContent: {
     maxWidth: '1200px',
@@ -230,16 +213,7 @@ const ListItemAuction = () => {
 
   return (
     <div style={styles.container}>
-      {/* Breadcrumb */}
-      <div style={styles.breadcrumb}>
-        <div style={styles.breadcrumbInner}>
-          <nav style={styles.breadcrumbText}>
-            <span style={styles.breadcrumbLink} onClick={() => navigate('/')}>Home</span>
-            <span> / </span>
-            <span>List Item for Auction</span>
-          </nav>
-        </div>
-      </div>
+      <Navbar />
 
       {/* Main Content */}
       <div style={styles.mainContent}>
