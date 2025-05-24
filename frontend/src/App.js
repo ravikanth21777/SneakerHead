@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Landing from "./routes/Landing";
 import Profile from "./routes/Profile";
 import ProductDescription from "./components/ProductDescription";
+import ListItemAuction from "./routes/ListItemAuction";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/product/:id" element={<ProductDescription />} />
+        <Route path="/list-auction" element={<ListItemAuction />} />
       </Routes>
     </Router>
   );

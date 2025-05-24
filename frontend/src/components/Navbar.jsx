@@ -78,6 +78,11 @@ const Navbar = ({ onBrandSelect }) => {
     navigate('/');
   };
 
+  const handleBidClick = () => {
+    // Redirecting to list item auction page
+    navigate('/list-auction');
+  };
+
   return (
     <>
       <motion.nav
@@ -228,8 +233,10 @@ const Navbar = ({ onBrandSelect }) => {
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             style={{ cursor: 'pointer' }}
+            onClick={handleBidClick}
+            title="List Item for Auction"
           >
-            🛒
+            💰
           </motion.span>
         </motion.div>
       </motion.nav>
