@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Heart, Share2, Clock, Users, Shield, Info, ChevronLeft, ChevronRight } from 'lucide-react';
+import Navbar from './Navbar';
+import { ChevronLeft, ChevronRight, Heart, Share2, Clock, Users, Info } from 'lucide-react';
 
 const DUMMY_SNEAKERS = [
   {
@@ -13,7 +14,7 @@ const DUMMY_SNEAKERS = [
     releaseDate: "2024",
     condition: "New",
     baseBid: 10799,
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/c06b24af87e744aa9e2daf8b00836bb7_9366/Samba_OG_Shoes_Black_ID2045_01_standard.jpg",
+    image: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png",
     auctionStart: '2024-05-21 10:00:00',
     auctionEnd: '2024-05-25 18:00:00',
     seller: 'SneakerVault_Official',
@@ -152,30 +153,19 @@ const ProductDescription = () => {
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8f8f8' }}>
-      {/* Breadcrumb */}
-      <div style={{ background: '#fff', borderBottom: '1px solid #eee' }}>
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0.75rem 1rem' }}>
-          <nav style={{ fontSize: '0.875rem', color: '#666' }}>
-            <span style={{ cursor: 'pointer' }} onClick={() => navigate('/')}>Home</span>
-            <span> / </span>
-            <span>Auctions</span>
-            <span> / </span>
-            <span>{productData.brand}</span>
-            <span> / </span>
-            <span style={{ color: '#333', fontWeight: '500' }}>{productData.name}</span>
-          </nav>
-        </div>
-      </div>
+      <Navbar />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '2rem 1rem' }}>
+        <h1 style={{ fontSize: '1.5rem', fontWeight: '700', color: '#333', textAlign: 'center', marginBottom: '2rem' }}>{productData.name}</h1>
+
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem', '@media (min-width: 768px)': { gridTemplateColumns: '1fr 1fr' } }}>
           {/* Image Gallery */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <div style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+            <div style={{ position: 'relative', borderRadius: '0.5rem', overflow: 'hidden', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
               <img 
                 src={images[currentImageIndex]} 
                 alt={`${productData.brand} ${productData.name}`}
-                style={{ width: '100%', height: '24rem', objectFit: 'cover' }}
+                style={{ width: '100%', height: 'auto', maxHeight: '500px', objectFit: 'contain' }}
               />
               <button 
                 onClick={prevImage}
@@ -194,23 +184,10 @@ const ProductDescription = () => {
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    style={{ width: '0.5rem', height: '0.5rem', borderRadius: '50%', background: index === currentImageIndex ? '#333' : '#ccc', transition: 'background 0.3s' }}
+                    style={{ width: '2rem', height: '0.25rem', borderRadius: '0.125rem', background: index === currentImageIndex ? '#333' : '#ccc', transition: 'background 0.3s' }}
                   />
                 ))}
               </div>
-            </div>
-            
-            {/* Thumbnail Images */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '0.5rem' }}>
-              {images.map((img, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  style={{ aspectRatio: '1 / 1', borderRadius: '0.5rem', overflow: 'hidden', border: index === currentImageIndex ? '2px solid #333' : '2px solid #ccc', transition: 'border 0.3s' }}
-                >
-                  <img src={img} alt={`View ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </button>
-              ))}
             </div>
           </div>
 
@@ -242,34 +219,27 @@ const ProductDescription = () => {
               </div>
             </div>
 
-            {/* Authenticity Badge */}
-            <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(72, 187, 120, 0.1)', border: '1px solid rgba(72, 187, 120, 0.3)', borderRadius: '0.5rem', padding: '0.75rem', gap: '0.5rem' }}>
-              <Shield className="w-5 h-5 text-green-600" />
-              <span style={{ fontWeight: '500', color: '#48bb78' }}>{productData.authenticity}</span>
-              <span style={{ color: '#48bb78' }}>Condition: {productData.condition}</span>
-            </div>
-
             {/* Auction Timer */}
             <div style={{ background: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)', borderRadius: '0.5rem', padding: '1rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '1rem' }}>
-                <Clock className="w-5 h-5 text-red-600 mr-2" />
-                <span style={{ fontWeight: '600', color: '#c53030' }}>Auction Ending Soon</span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <Clock className="w-5 h-5 text-red-600" />
+                <span style={{ fontWeight: '600', color: '#c53030', fontSize: '1rem' }}>Auction Ending Soon</span>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', textAlign: 'center' }}>
-                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.days}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1rem', textAlign: 'center' }}>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '1rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.days}</div>
                   <div style={{ fontSize: '0.875rem', color: '#666' }}>Days</div>
                 </div>
-                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.hours}</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '1rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.hours}</div>
                   <div style={{ fontSize: '0.875rem', color: '#666' }}>Hours</div>
                 </div>
-                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.minutes}</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '1rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.minutes}</div>
                   <div style={{ fontSize: '0.875rem', color: '#666' }}>Minutes</div>
                 </div>
-                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '0.5rem' }}>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.seconds}</div>
+                <div style={{ background: '#fff', borderRadius: '0.5rem', padding: '1rem', boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}>
+                  <div style={{ fontSize: '1.5rem', fontWeight: '700', color: '#c53030' }}>{timeLeft.seconds}</div>
                   <div style={{ fontSize: '0.875rem', color: '#666' }}>Seconds</div>
                 </div>
               </div>
@@ -296,14 +266,24 @@ const ProductDescription = () => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 <div>
                   <div style={{ fontSize: '0.875rem', fontWeight: '500', color: '#333', marginBottom: '0.5rem' }}>Your Bid Amount</div>
-                  <div style={{ position: 'relative' }}>
+                  <div style={{ position: 'relative', marginBottom: '1rem' }}>
                     <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>₹</span>
                     <input
                       type="text"
                       value={bidAmount}
                       onChange={(e) => setBidAmount(e.target.value)}
                       placeholder={`Minimum ${formatPrice(currentBid + 500)}`}
-                      style={{ width: '100%', padding: '0.75rem 1rem', paddingLeft: '2.5rem', border: '1px solid #ccc', borderRadius: '0.5rem', fontSize: '1rem', color: '#333', transition: 'border-color 0.3s' }}
+                      style={{ 
+                        width: '100%', 
+                        padding: '0.75rem 1rem', 
+                        paddingLeft: '2.5rem', 
+                        border: '1px solid #ccc', 
+                        borderRadius: '0.5rem', 
+                        fontSize: '1rem', 
+                        color: '#333', 
+                        transition: 'border-color 0.3s',
+                        boxSizing: 'border-box'
+                      }}
                     />
                   </div>
                   <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.25rem' }}>
@@ -328,9 +308,9 @@ const ProductDescription = () => {
               <div style={{ background: '#f7fafc', border: '1px solid #cbd5e0', borderRadius: '0.5rem', padding: '1rem', textAlign: 'center' }}>
                 <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#333' }}>{shoeSize}</span>
               </div>
-              <div style={{ marginTop: '1rem', fontSize: '0.875rem', color: '#666' }}>
-                <Info className="w-4 h-4 inline mr-1" />
-                Fits True to Size - Recommended to go with your true size
+              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Info className="w-5 h-5 text-gray-500" />
+                <span style={{ fontSize: '0.875rem', color: '#666' }}>Fits True to Size - Recommended to go with your true size</span>
               </div>
             </div>
 

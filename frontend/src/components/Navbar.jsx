@@ -47,11 +47,20 @@ const Navbar = ({ onBrandSelect }) => {
   }, []);
 
   const handleBrandToggle = (brandName) => {
-    setSelectedBrands(prev => 
-      prev.includes(brandName)
+    setSelectedBrands((prev) => {
+      const updatedBrands = prev.includes(brandName)
         ? prev.filter(b => b !== brandName)
-        : [...prev, brandName]
-    );
+        : [...prev, brandName];
+
+      // Redirect to the landing page with all selected brands as query parameters
+      const queryParams = new URLSearchParams();
+      if (updatedBrands.length > 0) {
+        queryParams.set('brand', updatedBrands.join(','));
+      }
+
+      navigate(`/?${queryParams.toString()}`);
+      return updatedBrands;
+    });
     setIsSearchFocused(false);
   };
 
