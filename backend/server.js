@@ -4,10 +4,15 @@ const User= require('./models/userModel');
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
-const connectDB = require('./config/db'); // Assuming you have a db.js file for DB connection
+const connectDB = require('./config/db');
+ // Assuming you have a db.js file for DB connection
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 connectDB();
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 // ========== REGISTER ==========
 app.post("/api/auth/register", async (req, res) => {
