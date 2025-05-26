@@ -14,7 +14,15 @@ const userSchema  = mongoose.Schema(
         password:{
             type:String,
             require:[true,'please add some password']
-        }
+        },
+        productsSold:[{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'Product'
+        }],
+        productsBought:[{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'Product'
+        }],
 
     },
     {

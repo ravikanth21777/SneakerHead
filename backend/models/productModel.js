@@ -42,6 +42,16 @@ const productSchema  = mongoose.Schema(
         buyNowPrice:{
             type:Number,
             require:[false,'please add some buy now price'],
+        },
+        seller:{
+            type:mongoose.Schema.Types.ObjectId,
+            require:[true,'please add some seller'],
+            ref:'User'
+        },
+        buyer:{
+            type:mongoose.Schema.Types.ObjectId,
+            ref:'User',
+            default:null
         }
 
     },
