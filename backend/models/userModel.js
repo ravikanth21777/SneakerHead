@@ -24,7 +24,11 @@ const userSchema  = mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:'Product'
         }],
-
+        profilePictureUrl:{
+            type:String,
+            default : '' ,
+        },
+        
     },
     {
         timestamps:true 
