@@ -7,7 +7,7 @@ const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const dotenv     = require('dotenv');
 const connectDB  = require('./config/db');
-const { profileUpload, productUpload } = require('./utils/upload');
+const { profileUpload, productUpload } = require('./util/upload');
 
 
 // Models
@@ -168,7 +168,7 @@ app.get('/api/products/my-bids', protect, async (req, res) => {
   res.json(products);
 });
 
-app.post('/api/user/profile-picture', upload.single('profilePicture'), async (req, res) => {
+app.post('/api/user/profile-picture', profileUpload.single('profilePicture'), async (req, res) => {
   try {
     const userId = req.body.userId; // should come from frontend
     const imageUrl = req.file.path || req.file.secure_url || req.file.url; // Cloudinary URL
