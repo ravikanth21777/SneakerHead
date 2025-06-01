@@ -32,7 +32,7 @@ const productSchema  = mongoose.Schema(
             require:[true,'please add some starting bid'],
         },
         AuctionEndDate:{
-            type:date,
+            type:Date,
             require:[true,'please add some date and time'],
         },
         bidIncrement:{
@@ -52,7 +52,11 @@ const productSchema  = mongoose.Schema(
             type:mongoose.Schema.Types.ObjectId,
             ref:'User',
             default:null
-        }
+        },
+        productPictureUrls:[{
+            type:String,
+            default : '' ,
+        }],
 
     },
     {

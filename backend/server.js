@@ -7,6 +7,8 @@ const bcrypt     = require('bcryptjs');
 const jwt        = require('jsonwebtoken');
 const dotenv     = require('dotenv');
 const connectDB  = require('./config/db');
+const { profileUpload, productUpload } = require('./utils/upload');
+
 
 // Models
 const User    = require('./models/userModel');
@@ -196,6 +198,27 @@ app.post('/api/user/profile-picture', upload.single('profilePicture'), async (re
   } catch (error) {
     console.error('Upload error:', error);
     res.status(500).json({ message: 'Server error while uploading profile picture' });
+  }
+});
+
+
+
+
+app.post('/api/products/upload-images', productUpload.array('productImages', 5), async (req, res) => {
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No images uploaded' });
+    }
+
+    const imageUrls = req.files.map(file => file.path || file.secure_url);
+
+    res.status(200).json({
+      message: 'Product images uploaded successfully',
+      imageUrls,
+    });
+  } catch (error) {
+    console.error('Image upload error:', error);
+    res.status(500).json({ message: 'Server error while uploading images' });
   }
 });
 
