@@ -50,7 +50,7 @@ const protect = async (req, res, next) => {
     next();
   } catch (error) {
     res.status(401).json({ message: 'Not authorized, token invalid' });
-  }
+  } 
 };
 
 // ========== AUTH ROUTES ==========
@@ -168,7 +168,7 @@ app.get('/api/products/my-bids', protect, async (req, res) => {
   res.json(products);
 });
 
-app.post('/api/user/profile-picture', profileUpload.single('profilePicture'), async (req, res) => {
+app.post('/api/user/profile-picture', profileUpload.single('profilePicture'),protect,  async (req, res) => {
   try {
     const userId = req.body.userId; // should come from frontend
     const imageUrl = req.file.path || req.file.secure_url || req.file.url; // Cloudinary URL
@@ -204,17 +204,31 @@ app.post('/api/user/profile-picture', profileUpload.single('profilePicture'), as
 
 
 
-app.post('/api/products/upload-images', productUpload.array('productImages', 5), async (req, res) => {
+// @route   POST /api/products/:id/upload-images
+app.post('/api/products/:id/upload-images', productUpload.array('productImages', 5), protect ,async (req, res) => {
   try {
+    const productId = req.params.id;
+
+    // Validate files
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No images uploaded' });
     }
 
-    const imageUrls = req.files.map(file => file.path || file.secure_url);
+    // Map uploaded file URLs
+    const imageUrls = req.files.map(file => file.path || file.secure_url || file.url);
+
+    // Find product and update its image URLs
+    const product = await Product.findById(productId);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    product.productPictureUrls.push(...imageUrls);
+    await product.save();
 
     res.status(200).json({
-      message: 'Product images uploaded successfully',
-      imageUrls,
+      message: 'Product images uploaded and saved successfully',
+      productPictureUrls: product.productPictureUrls,
     });
   } catch (error) {
     console.error('Image upload error:', error);
