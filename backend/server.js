@@ -62,7 +62,7 @@ app.post('/api/auth/register', async (req, res) => {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
-  if (await User.findOne({ email })) {
+  if (await (User.findOne({ email })) || await User.findOne({ username })) {
     return res.status(400).json({ message: 'User already exists' });
   }
 
