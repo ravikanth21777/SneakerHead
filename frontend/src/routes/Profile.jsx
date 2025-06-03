@@ -1,24 +1,55 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [isEditing, setIsEditing] = useState(false);
-  const [profileData, setProfileData] = useState({
-    name: 'John Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 8900',
-    address: '123 Sneaker Street, Footwear City, FC 12345'
-  });
+  const [loading, setLoading] = useState(true); // NEW
+  const [error, setError] = useState(null); // NEW
+ const [profileData, setProfileData] = useState({
+  username: '',
+  email: '',
+  profilePictureUrl: ''
+});
 
   const [formData, setFormData] = useState(profileData);
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem('token'); // get the JWT token from localStorage
+
+  if (!token) {
+    setError('User not logged in');
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const res = await axios.get('http://localhost:5000/api/auth/profile', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    console.log('Profile data:', res.data); // Log the response data
+    setProfileData(res.data);
+    setFormData(res.data);
+  } catch (err) {
+    console.error(err);
+    setError('Failed to load profile');
+  } finally {
+    setLoading(false);
+  }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
+    const { username, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [username]: value
     }));
   };
 
@@ -36,7 +67,7 @@ const Profile = () => {
       status: 'Delivered',
       items: [
         {
-          name: 'Lionel Messi X Samba Indoor "Spark Gen10s"',
+          username: 'Lionel Messi X Samba Indoor "Spark Gen10s"',
           price: 13099,
           image: 'https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/a4b35a2d1c5c46449c51af8b0083847f_9366/Samba_OG_Shoes_White_ID2046_01_standard.jpg'
         }
@@ -48,7 +79,7 @@ const Profile = () => {
       status: 'In Transit',
       items: [
         {
-          name: 'Nike Air Max 90',
+          username: 'Nike Air Max 90',
           price: 9995,
           image: 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png'
         }
@@ -105,7 +136,7 @@ const Profile = () => {
             👤
           </div>
           <div>
-            <h1 style={{ margin: '0 0 0.5rem 0' }}>{profileData.name}</h1>
+            <h1 style={{ margin: '0 0 0.5rem 0' }}>{profileData.username}</h1>
             <p style={{ margin: '0', color: '#666' }}>{profileData.email}</p>
           </div>
         </motion.div>
@@ -182,7 +213,7 @@ const Profile = () => {
                     >
                       <img
                         src={item.image}
-                        alt={item.name}
+                        alt={item.username}
                         style={{
                           width: '80px',
                           height: '80px',
@@ -191,7 +222,7 @@ const Profile = () => {
                         }}
                       />
                       <div>
-                        <p style={{ margin: '0', fontWeight: '500' }}>{item.name}</p>
+                        <p style={{ margin: '0', fontWeight: '500' }}>{item.username}</p>
                         <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
                           ₹{item.price.toLocaleString()}
                         </p>
@@ -242,12 +273,12 @@ const Profile = () => {
                     marginBottom: '0.5rem',
                     color: '#666'
                   }}>
-                    Full Name
+                    Full username
                   </label>
                   <input
                     type="text"
-                    name="name"
-                    value={isEditing ? formData.name : profileData.name}
+                    username="username"
+                    value={isEditing ? formData.username : profileData.username}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     style={{
@@ -271,7 +302,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="email"
-                    name="email"
+                    username="email"
                     value={isEditing ? formData.email : profileData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
@@ -296,7 +327,7 @@ const Profile = () => {
                   </label>
                   <input
                     type="tel"
-                    name="phone"
+                    username="phone"
                     value={isEditing ? formData.phone : profileData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
@@ -320,7 +351,7 @@ const Profile = () => {
                     Address
                   </label>
                   <textarea
-                    name="address"
+                    username="address"
                     value={isEditing ? formData.address : profileData.address}
                     onChange={handleInputChange}
                     disabled={!isEditing}
