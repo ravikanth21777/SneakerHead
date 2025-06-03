@@ -6,58 +6,119 @@ import Navbar from '../components/Navbar';
 const Profile = () => {
   const [activeTab, setActiveTab] = useState('orders');
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true); // NEW
-  const [error, setError] = useState(null); // NEW
- const [profileData, setProfileData] = useState({
-  username: '',
-  email: '',
-  profilePictureUrl: ''
-});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const [profileData, setProfileData] = useState({
+    username: '',
+    email: '',
+    profilePictureUrl: ''
+  });
 
   const [formData, setFormData] = useState(profileData);
+
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const token = localStorage.getItem('token'); // get the JWT token from localStorage
-
-  if (!token) {
-    setError('User not logged in');
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const res = await axios.get('http://localhost:5000/api/auth/profile', {
-      headers: {
-        Authorization: `Bearer ${token}`
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('User not logged in');
+        setLoading(false);
+        return;
       }
-    });
-    console.log('Profile data:', res.data); // Log the response data
-    setProfileData(res.data);
-    setFormData(res.data);
-  } catch (err) {
-    console.error(err);
-    setError('Failed to load profile');
-  } finally {
-    setLoading(false);
-  }
+      try {
+        const res = await axios.get('http://localhost:5000/api/auth/profile', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Profile data:', res.data);
+        setProfileData(res.data);
+        setFormData(res.data);
+      } catch (err) {
+        console.error(err);
+        setError('Failed to load profile');
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchUserProfile();
   }, []);
 
   const handleInputChange = (e) => {
-    const { username, value } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [username]: value
+      [name]: value
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setProfileData(formData);
-    setIsEditing(false);
-    // TODO: Implement API call to update profile
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('User not logged in');
+      return;
+    }
+    try {
+      const res = await axios.put(
+        'http://localhost:5000/api/auth/profile',
+        {
+          username: formData.username,
+          email: formData.email,
+          password: formData.password
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      console.log('Profile updated:', res.data);
+      setProfileData(res.data.user);
+      setIsEditing(false);
+    } catch (err) {
+      console.error('Error updating profile:', err);
+      setError('Failed to update profile');
+    }
+  };
+
+  const handleProfilePictureChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('User not logged in');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('profilePicture', file);
+
+    try {
+      const res = await axios.post(
+        'http://localhost:5000/api/auth/profile-picture',
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        }
+      );
+      setProfileData(prev => ({
+        ...prev,
+        profilePictureUrl: res.data.profilePictureUrl
+      }));
+    } catch (err) {
+      console.error('Error uploading profile picture:', err);
+      setError('Failed to upload profile picture');
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    document.getElementById('profilePictureInput').click();
   };
 
   const dummyOrders = [
@@ -67,9 +128,10 @@ const Profile = () => {
       status: 'Delivered',
       items: [
         {
-          username: 'Lionel Messi X Samba Indoor "Spark Gen10s"',
+          name: 'Lionel Messi X Samba Indoor "Spark Gen10s"',
           price: 13099,
-          image: 'https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/a4b35a2d1c5c46449c51af8b0083847f_9366/Samba_OG_Shoes_White_ID2046_01_standard.jpg'
+          image:
+            'https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/a4b35a2d1c5c46449c51af8b0083847f_9366/Samba_OG_Shoes_White_ID2046_01_standard.jpg'
         }
       ]
     },
@@ -79,9 +141,10 @@ const Profile = () => {
       status: 'In Transit',
       items: [
         {
-          username: 'Nike Air Max 90',
+          name: 'Nike Air Max 90',
           price: 9995,
-          image: 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png'
+          image:
+            'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png'
         }
       ]
     }
@@ -95,6 +158,9 @@ const Profile = () => {
     fontWeight: isActive ? '600' : '400',
     transition: 'all 0.3s ease'
   });
+
+  if (loading) return <div style={{ padding: '2rem' }}>Loading...</div>;
+  if (error) return <div style={{ padding: '2rem', color: 'red' }}>{error}</div>;
 
   return (
     <motion.div
@@ -122,22 +188,74 @@ const Profile = () => {
         >
           <div
             style={{
+              position: 'relative',
               width: '120px',
               height: '120px',
-              borderRadius: '60px',
-              background: '#ddd',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '3rem',
-              color: '#fff'
             }}
           >
-            👤
+            <div
+              style={{
+                width: '120px',
+                height: '120px',
+                borderRadius: '60px',
+                background: '#ddd',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '3rem',
+                color: '#fff',
+                overflow: 'hidden',
+                cursor: 'pointer',
+              }}
+              onClick={handleFileButtonClick}
+            >
+              {profileData.profilePictureUrl ? (
+                <img
+                  src={profileData.profilePictureUrl}
+                  alt="Profile"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'cover'
+                  }}
+                />
+              ) : (
+                '👤'
+              )}
+            </div>
+            <input
+              type="file"
+              id="profilePictureInput"
+              onChange={handleProfilePictureChange}
+              accept="image/*"
+              style={{ display: 'none' }}
+            />
+            {isEditing && (
+              <div
+                style={{
+                  position: 'absolute',
+                  bottom: 0,
+                  right: 0,
+                  background: '#000',
+                  color: '#fff',
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '16px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontSize: '18px',
+                }}
+                onClick={handleFileButtonClick}
+              >
+                ✎
+              </div>
+            )}
           </div>
           <div>
             <h1 style={{ margin: '0 0 0.5rem 0' }}>{profileData.username}</h1>
-            <p style={{ margin: '0', color: '#666' }}>{profileData.email}</p>
+            <p style={{ margin: 0, color: '#666' }}>{profileData.email}</p>
           </div>
         </motion.div>
 
@@ -168,7 +286,7 @@ const Profile = () => {
           >
             <h2 style={{ marginBottom: '1.5rem' }}>Order History</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {dummyOrders.map(order => (
+              {dummyOrders.map((order) => (
                 <motion.div
                   key={order.id}
                   whileHover={{ y: -4 }}
@@ -179,25 +297,29 @@ const Profile = () => {
                     background: '#fff'
                   }}
                 >
-                  <div style={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    marginBottom: '1rem',
-                    alignItems: 'center'
-                  }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      marginBottom: '1rem',
+                      alignItems: 'center'
+                    }}
+                  >
                     <div>
-                      <p style={{ margin: '0', fontWeight: '600' }}>Order #{order.id}</p>
+                      <p style={{ margin: 0, fontWeight: '600' }}>Order #{order.id}</p>
                       <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
                         {new Date(order.date).toLocaleDateString()}
                       </p>
                     </div>
-                    <span style={{
-                      padding: '0.5rem 1rem',
-                      borderRadius: '20px',
-                      background: order.status === 'Delivered' ? '#e8f5e9' : '#fff3e0',
-                      color: order.status === 'Delivered' ? '#2e7d32' : '#ef6c00',
-                      fontSize: '0.9rem'
-                    }}>
+                    <span
+                      style={{
+                        padding: '0.5rem 1rem',
+                        borderRadius: '20px',
+                        background: order.status === 'Delivered' ? '#e8f5e9' : '#fff3e0',
+                        color: order.status === 'Delivered' ? '#2e7d32' : '#ef6c00',
+                        fontSize: '0.9rem'
+                      }}
+                    >
                       {order.status}
                     </span>
                   </div>
@@ -213,7 +335,7 @@ const Profile = () => {
                     >
                       <img
                         src={item.image}
-                        alt={item.username}
+                        alt={item.name}
                         style={{
                           width: '80px',
                           height: '80px',
@@ -222,7 +344,7 @@ const Profile = () => {
                         }}
                       />
                       <div>
-                        <p style={{ margin: '0', fontWeight: '500' }}>{item.username}</p>
+                        <p style={{ margin: 0, fontWeight: '500' }}>{item.name}</p>
                         <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
                           ₹{item.price.toLocaleString()}
                         </p>
@@ -239,7 +361,14 @@ const Profile = () => {
             animate={{ y: 0, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '2rem'
+              }}
+            >
               <h2 style={{ margin: 0 }}>Profile Settings</h2>
               {!isEditing && (
                 <motion.button
@@ -262,22 +391,26 @@ const Profile = () => {
             </div>
 
             <form onSubmit={handleSubmit}>
-              <div style={{ 
-                display: 'grid', 
-                gap: '1.5rem',
-                maxWidth: '600px'
-              }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gap: '1.5rem',
+                  maxWidth: '600px'
+                }}
+              >
                 <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    color: '#666'
-                  }}>
-                    Full username
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#666'
+                    }}
+                  >
+                    Username
                   </label>
                   <input
                     type="text"
-                    username="username"
+                    name="username"
                     value={isEditing ? formData.username : profileData.username}
                     onChange={handleInputChange}
                     disabled={!isEditing}
@@ -289,20 +422,23 @@ const Profile = () => {
                       fontSize: '1rem',
                       background: isEditing ? '#fff' : '#f8f8f8'
                     }}
+                    required
                   />
                 </div>
 
                 <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    color: '#666'
-                  }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#666'
+                    }}
+                  >
                     Email
                   </label>
                   <input
                     type="email"
-                    username="email"
+                    name="email"
                     value={isEditing ? formData.email : profileData.email}
                     onChange={handleInputChange}
                     disabled={!isEditing}
@@ -314,21 +450,24 @@ const Profile = () => {
                       fontSize: '1rem',
                       background: isEditing ? '#fff' : '#f8f8f8'
                     }}
+                    required
                   />
                 </div>
 
                 <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    color: '#666'
-                  }}>
-                    Phone Number
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#666'
+                    }}
+                  >
+                    Password
                   </label>
                   <input
-                    type="tel"
-                    username="phone"
-                    value={isEditing ? formData.phone : profileData.phone}
+                    type="password"
+                    name="password"
+                    value={formData.password || ''}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     style={{
@@ -339,40 +478,13 @@ const Profile = () => {
                       fontSize: '1rem',
                       background: isEditing ? '#fff' : '#f8f8f8'
                     }}
-                  />
-                </div>
-
-                <div>
-                  <label style={{ 
-                    display: 'block', 
-                    marginBottom: '0.5rem',
-                    color: '#666'
-                  }}>
-                    Address
-                  </label>
-                  <textarea
-                    username="address"
-                    value={isEditing ? formData.address : profileData.address}
-                    onChange={handleInputChange}
-                    disabled={!isEditing}
-                    style={{
-                      width: '100%',
-                      padding: '0.8rem',
-                      border: '1px solid #ddd',
-                      borderRadius: '8px',
-                      fontSize: '1rem',
-                      minHeight: '100px',
-                      resize: 'vertical',
-                      background: isEditing ? '#fff' : '#f8f8f8'
-                    }}
+                    placeholder="Leave blank to keep current password"
                   />
                 </div>
 
                 {isEditing && (
-                  <div style={{ display: 'flex', gap: '1rem' }}>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                  <div style={{ marginTop: '1rem' }}>
+                    <button
                       type="submit"
                       style={{
                         padding: '0.8rem 2rem',
@@ -382,32 +494,30 @@ const Profile = () => {
                         borderRadius: '8px',
                         cursor: 'pointer',
                         fontSize: '1rem',
-                        flex: 1
+                        marginRight: '1rem'
                       }}
                     >
-                      Save Changes
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                      Save
+                    </button>
+                    <button
                       type="button"
                       onClick={() => {
-                        setFormData(profileData);
                         setIsEditing(false);
+                        setFormData(profileData);
+                        setError(null);
                       }}
                       style={{
                         padding: '0.8rem 2rem',
-                        background: '#fff',
-                        color: '#000',
-                        border: '1px solid #000',
+                        background: '#ddd',
+                        color: '#333',
+                        border: 'none',
                         borderRadius: '8px',
                         cursor: 'pointer',
-                        fontSize: '1rem',
-                        flex: 1
+                        fontSize: '1rem'
                       }}
                     >
                       Cancel
-                    </motion.button>
+                    </button>
                   </div>
                 )}
               </div>

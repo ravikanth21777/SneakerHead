@@ -1,6 +1,42 @@
 const User = require('../models/userModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const cloudinary = require('../util/cloudinary');
+
+
+exports.uploadProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user._id ;
+    const imageUrl = req.file?.path || req.file?.secure_url || req.file?.url;
+
+    if (!userId || !imageUrl) {
+      return res.status(400).json({ message: 'Missing user ID or image file' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profilePictureUrl: imageUrl },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    console.log("userId:", userId);
+    console.log("Uploaded file info:", req.file);
+    console.log("imageUrl:", imageUrl);
+    console.log("Updated user:", user);
+
+    res.status(200).json({
+      message: 'Profile picture uploaded successfully',
+      profilePicture: user.profilePictureUrl,
+    });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ message: 'Server error while uploading profile picture' });
+  }
+};
 
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
@@ -48,6 +84,26 @@ exports.getProfile = async (req, res) => {
     const user = await User.findById(req.user._id).select('-password');
     if (!user) return res.status(404).json({ message: 'User not found' });
     res.json(user);
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  const { username, email, password } = req.body;
+  try {
+    const user = await User.findById(req.user._id);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
+    }
+
+    await user.save();
+    res.json({ message: 'Profile updated successfully', user: { _id: user._id, username: user.username, email: user.email } });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }
