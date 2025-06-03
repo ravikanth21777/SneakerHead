@@ -66,7 +66,9 @@ const Navbar = ({ onBrandSelect }) => {
 
   const handleProfileClick = () => {
     // Check if user is authenticated
-    const isAuthenticated = false; // TODO: Implement actual auth check
+    const token = localStorage.getItem('token');
+    const isAuthenticated = !!token;
+   
     if (isAuthenticated) {
       navigate('/profile');
     } else {
