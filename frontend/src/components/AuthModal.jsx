@@ -1,18 +1,47 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import sneakerBg from '../assets/sneaker-auth-bg.svg';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+
+
+
 
 const AuthModal = ({ isOpen, onClose }) => {
+  const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: Implement actual auth logic
-    console.log(isLogin ? 'Login' : 'Signup', { email, password, name });
-  };
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  try {
+    const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
+    const payload = isLogin
+      ? { email, password }             // For login
+      : { username:name, email, password };
+      console.log('Payload:', payload);     // For signup
+
+    const response = await axios.post(endpoint, payload);
+
+    console.log('Server response:', response.data);
+
+    // Example: Store the token if backend sends it
+    // localStorage.setItem('token', response.data.token);
+    // Optionally store the token
+    localStorage.setItem('token', response.data.token);
+
+    alert(isLogin ? 'Logged in successfully!' : 'Registered successfully!');
+    navigate('/profile'); // 👈 Redirect after success
+    onClose(); // Close the modal
+
+  } catch (err) {
+    console.error('Error:', err.response?.data?.message || err.message);
+    alert(err.response?.data?.message || 'Something went wrong');
+  }
+};
 
   return (
     <AnimatePresence>
