@@ -1,60 +1,10 @@
 // src/routes/Landing.jsx
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { motion } from 'framer-motion';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
-
-const dummySneakers = [
-  {
-    id: "adidas_samba_1",
-    name: "Lionel Messi X Samba 'Inter Miami CF - Away Kit'",
-    price: 10799,
-    brand: "Adidas",
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/c06b24af87e744aa9e2daf8b00836bb7_9366/Samba_OG_Shoes_Black_ID2045_01_standard.jpg"
-  },
-  {
-    id: "adidas_samba_2",
-    name: "Lionel Messi X Samba Indoor 'Spark Gen10s'",
-    price: 13099,
-    brand: "Adidas",
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/a4b35a2d1c5c46449c51af8b0083847f_9366/Samba_OG_Shoes_White_ID2046_01_standard.jpg"
-  },
-  {
-    id: "adidas_samba_3",
-    name: "Lionel Messi X Samba 'Inter Miami CF - Home Kit'",
-    price: 13999,
-    brand: "Adidas",
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/ce0b1685b7de4aa3981daf8b00837f1e_9366/Samba_OG_Shoes_Pink_ID2047_01_standard.jpg"
-  },
-  {
-    id: "adidas_samba_4",
-    name: "Lionel Messi X Samba 'Triunfo Dorado'",
-    price: 11099,
-    brand: "Adidas",
-    image: "https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/d0b6d063fa1c4a73a615af8b0083a51b_9366/Samba_OG_Shoes_Black_ID2048_01_standard.jpg"
-  },
-  {
-    id: "nike_air_1",
-    name: "Nike Air Max 90",
-    price: 9995,
-    brand: "Nike",
-    image: "https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png"
-  },
-  {
-    id: "asics_gel_1",
-    name: "ASICS Gel-Kayano 29",
-    price: 15999,
-    brand: "ASICS",
-    image: "https://images.asics.com/is/image/asics/1011B405_020_SR_RT_GLB?$zoom$"
-  },
-  {
-    id: "puma_rs_1",
-    name: "PUMA RS-X³ Puzzle",
-    price: 8999,
-    brand: "Puma",
-    image: "https://images.puma.com/image/upload/f_auto,q_auto,b_rgb:fafafa,w_1350,h_1350/global/371570/04/sv01/fnd/IND/fmt/png/PUMA-RS-X%C2%B3-Puzzle-Shoes"
-  }
-];
 
 const fadeInUp = {
   initial: { y: 60, opacity: 0 },
@@ -71,34 +21,80 @@ const staggerContainer = {
 };
 
 const Landing = () => {
+  // 1️⃣ Track which brands are selected
   const [selectedBrands, setSelectedBrands] = useState([]);
 
-  // Filter products based on selected brands
-  const filteredSneakers = dummySneakers.filter(sneaker => 
-    selectedBrands.length === 0 || selectedBrands.includes(sneaker.brand)
-  );
+  // 2️⃣ State for products, loading, and error
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // 3️⃣ Fetch live products from backend on component mount
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        // Use full URL so we avoid proxy issues
+        const response = await axios.get('http://localhost:5000/api/products');
+        console.log('Fetched products:', response.data);
+        setProducts(response.data);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        if (err.response) {
+          console.error('Response data:', err.response.data);
+          console.error('Response status:', err.response.status);
+          setError(`Server returned ${err.response.status}`);
+        } else if (err.request) {
+          console.error('No response received:', err.request);
+          setError('No response from server');
+        } else {
+          setError(err.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // 4️⃣ Filter by selectedBrands (empty array = show all)
+  const filteredSneakers = products.filter((sneaker) => {
+    return selectedBrands.length === 0 || selectedBrands.includes(sneaker.brand);
+  });
+
+  // 5️⃣ Called by Navbar when brand checkboxes change
   const handleBrandSelection = (brands) => {
     setSelectedBrands(brands);
   };
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      style={{ minHeight: "100vh", background: "#ffffff" }}
+      style={{ minHeight: '100vh', background: '#ffffff' }}
     >
+      {/* Navbar */}
       <Navbar onBrandSelect={handleBrandSelection} />
 
-      {/* Breadcrumb with fade */}
-      <motion.div 
+      {/* Breadcrumb */}
+      <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        style={{ padding: "1rem 2rem", borderBottom: "1px solid #eee" }}
+        style={{ padding: '1rem 2rem', borderBottom: '1px solid #eee' }}
       >
-        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", fontSize: "0.9rem" }}>
+        <div
+          style={{
+            display: 'flex',
+            gap: '0.5rem',
+            alignItems: 'center',
+            fontSize: '0.9rem'
+          }}
+        >
           <span>Home</span>
           <span>/</span>
           <span>Collection</span>
@@ -107,36 +103,42 @@ const Landing = () => {
         </div>
       </motion.div>
 
-      {/* Header with slide */}
-      <motion.div 
+      {/* Header: Title, Count, Sort */}
+      <motion.div
         initial={{ x: -20, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.4 }}
-        style={{ 
-          padding: "1rem 2rem",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          borderBottom: "1px solid #eee"
+        style={{
+          padding: '1rem 2rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: '1px solid #eee'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <h2 style={{ margin: 0, fontSize: "1.5rem" }}>
-            {selectedBrands.length > 0 
+          <h2 style={{ margin: 0, fontSize: '1.5rem' }}>
+            {selectedBrands.length > 0
               ? `${selectedBrands.join(' & ')} Sneakers`
               : 'All Sneakers'}
           </h2>
           <span style={{ color: '#666', fontSize: '0.9rem' }}>
-            ({filteredSneakers.length} products)
+            {loading
+              ? 'Loading…'
+              : `(${filteredSneakers.length} products)`}
           </span>
         </div>
-        <h2 style={{ margin: 0, fontSize: "1.5rem" }}>Buy All Sneakers</h2>
-        <select style={{ 
-          padding: "0.5rem", 
-          border: "1px solid #ddd",
-          borderRadius: "4px",
-          outline: "none"
-        }}>
+
+        <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Buy All Sneakers</h2>
+
+        <select
+          style={{
+            padding: '0.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            outline: 'none'
+          }}
+        >
           <option>Sort By</option>
           <option>Price: Low to High</option>
           <option>Price: High to Low</option>
@@ -144,34 +146,61 @@ const Landing = () => {
         </select>
       </motion.div>
 
-      {/* Main Content */}
-      <motion.div 
-        variants={staggerContainer}
-        initial="initial"
-        animate="animate"
-        style={{ padding: "2rem" }}
-      >
-        {/* Products Grid with stagger effect */}
-        <motion.div 
-          variants={staggerContainer}
-          style={{ width: "100%" }}
+      {/* Loading / Error */}
+      {loading && (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+          <p>Loading products…</p>
+        </div>
+      )}
+      {error && (
+        <div
+          style={{
+            padding: '2rem',
+            textAlign: 'center',
+            color: 'red'
+          }}
         >
-          <motion.div 
-            style={{ 
-              display: "grid", 
-              gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", 
-              gap: "2rem"
-            }}
-          >
-            {filteredSneakers.map((sneaker) => (
-              <ProductCard 
-                key={sneaker.id} 
-                product={sneaker} 
-              />
-            ))}
+          <p>{error}</p>
+        </div>
+      )}
+
+      {/* Product Grid (only if not loading & no error) */}
+      {!loading && !error && (
+        <motion.div
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+          style={{ padding: '2rem' }}
+        >
+          <motion.div style={{ width: '100%' }}>
+            <motion.div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+                gap: '2rem'
+              }}
+            >
+              {filteredSneakers.map((sneaker) => (
+                <ProductCard
+                  key={sneaker._id}
+                  product={{
+                    id: sneaker._id,
+                    name: sneaker.name,
+                    brand: sneaker.brand,
+                    currentBid: sneaker.currentBid || sneaker.startBid || 0,
+                    basePrice: sneaker.startBid || 0,
+                    AuctionEndDate: sneaker.AuctionEndDate,
+                    image:
+                      sneaker.images && sneaker.images.length > 0
+                        ? sneaker.images[0].url
+                        : 'https://via.placeholder.com/300x300?text=No+Image'
+                  }}
+                />
+              ))}
+            </motion.div>
           </motion.div>
         </motion.div>
-      </motion.div>
+      )}
     </motion.div>
   );
 };
