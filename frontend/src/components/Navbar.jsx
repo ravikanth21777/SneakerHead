@@ -1,3 +1,5 @@
+// src/components/Navbar.jsx
+
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -27,6 +29,11 @@ const Navbar = ({ onBrandSelect }) => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  // Track authentication by checking localStorage token.
+  // We won't store it in state (to avoid syncing issues),
+  // but we will force a reload on logout so this recalc is fresh.
+  const isAuthenticated = !!localStorage.getItem('token');
+
   // Update parent component when selected brands change
   useEffect(() => {
     if (onBrandSelect) {
@@ -34,10 +41,13 @@ const Navbar = ({ onBrandSelect }) => {
     }
   }, [selectedBrands, onBrandSelect]);
 
+  // Close search dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchRef.current && !searchRef.current.contains(event.target) &&
-          dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        searchRef.current && !searchRef.current.contains(event.target) &&
+        dropdownRef.current && !dropdownRef.current.contains(event.target)
+      ) {
         setIsSearchFocused(false);
       }
     };
@@ -52,12 +62,11 @@ const Navbar = ({ onBrandSelect }) => {
         ? prev.filter(b => b !== brandName)
         : [...prev, brandName];
 
-      // Redirect to the landing page with all selected brands as query parameters
+      // Redirect to landing page with selected brands as query params
       const queryParams = new URLSearchParams();
       if (updatedBrands.length > 0) {
         queryParams.set('brand', updatedBrands.join(','));
       }
-
       navigate(`/?${queryParams.toString()}`);
       return updatedBrands;
     });
@@ -65,13 +74,12 @@ const Navbar = ({ onBrandSelect }) => {
   };
 
   const handleProfileClick = () => {
-    // Check if user is authenticated
     const token = localStorage.getItem('token');
-    const isAuthenticated = !!token;
-   
-    if (isAuthenticated) {
+    if (token) {
+      // If logged in, go to profile
       navigate('/profile');
     } else {
+      // Otherwise, open Auth modal
       setIsAuthModalOpen(true);
     }
   };
@@ -81,8 +89,21 @@ const Navbar = ({ onBrandSelect }) => {
   };
 
   const handleBidClick = () => {
-    // Redirecting to list item auction page
     navigate('/list-auction');
+  };
+
+  const handleLogout = () => {
+    // 1. Remove all stored auth info
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    // (Remove any other keys you might have saved, e.g. email or refresh tokens.)
+
+    // 2. Navigate to home
+    navigate('/');
+
+    // 3. Force a reload so that Navbar re‐mounts and hides the Logout button
+    window.location.reload();
   };
 
   return (
@@ -104,6 +125,7 @@ const Navbar = ({ onBrandSelect }) => {
           gap: '1rem'
         }}
       >
+        {/* Logo / Brand Name */}
         <motion.h1 
           whileHover={{ scale: 1.05 }}
           style={{ 
@@ -111,7 +133,7 @@ const Navbar = ({ onBrandSelect }) => {
             fontWeight: "bold", 
             fontSize: "1.5rem", 
             flex: '0 0 auto',
-            cursor: 'pointer' 
+            cursor: 'pointer'
           }}
           onClick={handleLogoClick}
         >
@@ -119,7 +141,10 @@ const Navbar = ({ onBrandSelect }) => {
         </motion.h1>
 
         {/* Search Bar */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }} ref={searchRef}>
+        <div 
+          style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }} 
+          ref={searchRef}
+        >
           <motion.div 
             style={{
               display: 'flex',
@@ -216,21 +241,25 @@ const Navbar = ({ onBrandSelect }) => {
           </AnimatePresence>
         </div>
 
-        {/* Icons */}
+        {/* Icons + Logout */}
         <motion.div 
           variants={staggerContainer}
           initial="initial"
           animate="animate"
           style={{ display: "flex", gap: "1.5rem", alignItems: "center", flex: '0 0 auto' }}
         >
+          {/* Profile Icon */}
           <motion.span
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             style={{ cursor: 'pointer' }}
             onClick={handleProfileClick}
+            title={isAuthenticated ? "Go to Profile" : "Sign In / Sign Up"}
           >
             👤
           </motion.span>
+
+          {/* Bid/List Item Icon */}
           <motion.span
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
@@ -240,9 +269,31 @@ const Navbar = ({ onBrandSelect }) => {
           >
             💰
           </motion.span>
+
+          {/* Logout Button (only show if logged in) */}
+          {isAuthenticated && (
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={handleLogout}
+              style={{
+                background: 'none',
+                border: '1px solid #ddd',
+                borderRadius: '8px',
+                padding: '0.4rem 0.8rem',
+                fontSize: '1rem',
+                cursor: 'pointer',
+                color: '#333'
+              }}
+              title="Log Out"
+            >
+              Logout
+            </motion.button>
+          )}
         </motion.div>
       </motion.nav>
 
+      {/* Authentication Modal */}
       <AuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
