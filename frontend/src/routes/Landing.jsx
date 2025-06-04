@@ -191,9 +191,10 @@ const Landing = () => {
                     basePrice: sneaker.startBid || 0,
                     AuctionEndDate: sneaker.AuctionEndDate,
                     image:
-                      sneaker.images && sneaker.images.length > 0
-                        ? sneaker.images[0].url
-                        : 'https://via.placeholder.com/300x300?text=No+Image'
+                      sneaker.productPictureUrls && sneaker.productPictureUrls.length > 0
+                        ? sneaker.productPictureUrls[0]
+                          : 'https://via.placeholder.com/300x300?text=No+Image'
+
                   }}
                 />
               ))}

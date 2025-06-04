@@ -2,6 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
+// Helper function to generate unique hash for each image
+const generateImageHash = (file) => {
+  return `${file.name}-${file.size}-${file.lastModified}`;
+};
+
 const conditions = ["New with Box", "New without Box", "Used - Like New", "Used - Good", "Used - Fair"];
 const categories = ["Sneakers", "Limited Edition", "Collaboration", "Vintage", "Custom"];
 const sizes = Array.from({ length: 20 }, (_, i) => i + 3).map(num => `US ${num}`);
@@ -161,6 +166,7 @@ const ListItemAuction = () => {
   const [images, setImages] = useState([]);
   const [previewImages, setPreviewImages] = useState([]);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     productTitle: '',
     description: '',
@@ -176,25 +182,75 @@ const ListItemAuction = () => {
     reservePrice: '',
     buyItNowPrice: '',
     quantity: 1
-  });
+  });    const handleImageUpload = (event) => {
+      const files = Array.from(event.target.files);
+      const maxImages = 5;
+      const remainingSlots = maxImages - images.length;
+      
+      if (files.length === 0) return;
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    setImages([...images, ...files]);
+      if (files.length > remainingSlots) {
+        alert(`You can only add ${remainingSlots} more image${remainingSlots > 1 ? 's' : ''}`);
+        return;
+      }
+
+      // Get hashes of existing images
+      const existingHashes = images.map(generateImageHash);
+
+      // Validate file types, sizes, and duplicates
+      const validFiles = files.filter(file => {
+        const isImage = file.type.startsWith('image/');
+        const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
+        const isDuplicate = existingHashes.includes(generateImageHash(file));
+        
+        if (!isImage) {
+          alert(`File "${file.name}" is not an image`);
+          return false;
+        }
+        if (!isValidSize) {
+          alert(`File "${file.name}" exceeds 5MB limit`);
+          return false;
+        }
+        if (isDuplicate) {
+          alert(`File "${file.name}" has already been added`);
+          return false;
+        }
+        return true;
+      });
+
+    if (validFiles.length === 0) return;
+    
+    setImages(prevImages => [...prevImages, ...validFiles]);
 
     // Create preview URLs
-    const newPreviewImages = files.map(file => URL.createObjectURL(file));
-    setPreviewImages([...previewImages, ...newPreviewImages]);
+    const newPreviewImages = validFiles.map(file => URL.createObjectURL(file));
+    setPreviewImages(prevPreviews => [...prevPreviews, ...newPreviewImages]);
   };
 
   const removeImage = (index) => {
     const newImages = [...images];
     const newPreviews = [...previewImages];
+    
+    // Revoke the URL to prevent memory leaks
+    URL.revokeObjectURL(previewImages[index]);
+    
     newImages.splice(index, 1);
     newPreviews.splice(index, 1);
     setImages(newImages);
     setPreviewImages(newPreviews);
+    
+    if (currentImageIndex >= newPreviews.length) {
+      setCurrentImageIndex(Math.max(0, newPreviews.length - 1));
+    }
   };
+
+  // Component cleanup
+  React.useEffect(() => {
+    // Cleanup function to revoke object URLs when component unmounts
+    return () => {
+      previewImages.forEach(url => URL.revokeObjectURL(url));
+    };
+  }, []); // Empty dependency array means this runs on unmount
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -204,12 +260,87 @@ const ListItemAuction = () => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: Implement form submission
-    console.log(formData);
-    console.log(images);
-  };
+    const token = localStorage.getItem('token');
+    if (!token) {
+      setError('User not logged in');
+      return;
+    }
+
+    if (images.length === 0) {
+      setError('Please upload at least one image');
+      return;
+    }
+
+    try {
+      setError(''); // Clear any previous errors
+      // STEP 1: Create the product
+      const productResponse = await fetch('http://localhost:5000/api/products', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: formData.productTitle,
+          description: formData.description,
+          brand: formData.brand,
+          edition: formData.modelEdition,
+          size: formData.size,
+          category: formData.category,
+          startBid: parseFloat(formData.startingBid),
+          AuctionEndDate: new Date(formData.auctionDuration).toISOString(),
+          bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : undefined,
+          buyNowPrice: formData.buyItNowPrice ? parseFloat(formData.buyItNowPrice) : undefined,
+          condition: formData.condition,
+          sku: formData.sku || undefined,
+          reservePrice: formData.reservePrice ? parseFloat(formData.reservePrice) : undefined
+        })
+      });
+
+    const productData = await productResponse.json();
+    if (!productResponse.ok) {
+      alert(productData.message || 'Failed to create product');
+      return;
+    }
+
+    const productId = productData._id;
+
+    // STEP 2: Upload images
+    const imageFormData = new FormData();
+    images.forEach(file => imageFormData.append('productImages', file));
+
+    const imageResponse = await fetch(`http://localhost:5000/api/products/${productId}/upload-images`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+        // Don't set Content-Type here; browser will set it with boundary for multipart/form-data
+      },
+      body: imageFormData,
+    });
+
+    if (!imageResponse.ok) {
+      const errorText = await imageResponse.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        setError(errorJson.message || 'Failed to upload product images');
+      } catch (e) {
+        setError('Failed to upload product images');
+      }
+      return;
+    }
+
+    const imageResult = await imageResponse.json();
+    setError('');
+    alert('Product listed successfully!');
+    navigate('/profile');
+
+  } catch (err) {
+    console.error(err);
+    alert('Something went wrong while submitting the form');
+  }
+};
 
   return (
     <div style={styles.container}>
@@ -221,13 +352,43 @@ const ListItemAuction = () => {
         <div style={styles.imageSection}>
           <div style={styles.previewContainer}>
             {previewImages.length > 0 ? (
-              <img 
-                src={previewImages[currentImageIndex]}
-                alt="Primary preview"
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
+              <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+                <img
+                  src={previewImages[currentImageIndex]}
+                  alt={`Preview ${currentImageIndex + 1}`}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '0.5rem' }}
+                />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeImage(currentImageIndex);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    background: 'rgba(0,0,0,0.6)',
+                    border: 'none',
+                    borderRadius: '50%',
+                    color: 'white',
+                    width: '24px',
+                    height: '24px',
+                    fontSize: '16px',
+                    lineHeight: '24px',
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    zIndex: 10
+                  }}
+                  title="Remove image"
+                >
+                  ×
+                </button>
+              </div>
             ) : (
-              <div style={styles.uploadPlaceholder}>
+              <div 
+                style={styles.uploadPlaceholder}
+                onClick={() => document.getElementById('image-upload').click()}
+              >
                 <svg
                   style={styles.uploadIcon}
                   stroke="currentColor"
@@ -242,15 +403,15 @@ const ListItemAuction = () => {
                     strokeLinejoin="round"
                   />
                 </svg>
-                <span>Add product images</span>
+                <span>Add product images (up to 5)</span>
                 <label style={{ color: '#EF4444', cursor: 'pointer', fontWeight: 500 }}>
                   Upload files
                   <input
+                    id="image-upload"
                     type="file"
                     multiple
                     accept="image/*"
                     onChange={handleImageUpload}
-                    required={images.length === 0}
                     style={styles.srOnly}
                   />
                 </label>
@@ -276,6 +437,37 @@ const ListItemAuction = () => {
                   />
                 </button>
               ))}
+              {previewImages.length < 5 && (
+                <label
+                  style={{
+                    ...styles.thumbnailButton,
+                    border: '1px dashed #E5E7EB',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#666',
+                    fontSize: '24px',
+                    background: '#f8f8f8',
+                    transition: 'all 0.2s ease',
+                    cursor: 'pointer'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                  onMouseOut={(e) => e.currentTarget.style.background = '#f8f8f8'}
+                  title="Add more images"
+                >
+                  +
+                  <input
+                    type="file"
+                    onChange={handleImageUpload}
+                    accept="image/*"
+                    multiple
+                    style={styles.srOnly}
+                    onClick={(e) => {
+                      e.target.value = ''; // Clear the input to allow selecting the same file again
+                    }}
+                  />
+                </label>
+              )}
             </div>
           )}
         </div>
@@ -284,6 +476,18 @@ const ListItemAuction = () => {
         <div style={styles.formSection}>
           <h1 style={styles.formTitle}>List Your Sneaker</h1>
           <p style={styles.formSubtitle}>Fill in the details to list your sneaker for auction</p>
+          {error && (
+            <div style={{
+              padding: '0.75rem',
+              marginBottom: '1rem',
+              backgroundColor: '#FEE2E2',
+              color: '#DC2626',
+              borderRadius: '0.5rem',
+              fontSize: '0.875rem'
+            }}>
+              {error}
+            </div>
+          )}
 
           <form onSubmit={handleSubmit}>
             {/* Basic Information */}

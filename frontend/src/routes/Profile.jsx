@@ -111,6 +111,9 @@ const Profile = () => {
         ...prev,
         profilePictureUrl: res.data.profilePictureUrl
       }));
+      window.location.reload(); // Reload to reflect changes
+      setIsEditing(false);
+      setError(null);
     } catch (err) {
       console.error('Error uploading profile picture:', err);
       setError('Failed to upload profile picture');
@@ -207,7 +210,7 @@ const Profile = () => {
                 overflow: 'hidden',
                 cursor: 'pointer',
               }}
-              onClick={handleFileButtonClick}
+              onClick={isEditing ? handleFileButtonClick : undefined}
             >
               {profileData.profilePictureUrl ? (
                 <img

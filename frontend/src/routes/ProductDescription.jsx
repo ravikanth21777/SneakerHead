@@ -44,11 +44,12 @@ const ProductDescription = () => {
         setWatchers( product.watchersCount || 0 ); // adjust if you track watchers
 
         // Build an array of image URLs; if none exist, fallback to a placeholder
-        if (product.images && product.images.length > 0) {
-          setImages(product.images.map((imgObj) => imgObj.url));
+        if (product.productPictureUrls && product.productPictureUrls.length > 0) {
+          setImages(product.productPictureUrls);
         } else {
-          setImages([product.image || 'https://via.placeholder.com/600x600?text=No+Image']);
-        }
+          setImages(['https://via.placeholder.com/600x600?text=No+Image']);
+          }
+
       } catch (err) {
         console.error('Error fetching product:', err);
         if (err.response) {
