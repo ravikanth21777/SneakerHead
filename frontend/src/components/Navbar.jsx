@@ -29,19 +29,17 @@ const Navbar = ({ onBrandSelect }) => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
-  // Track authentication by checking localStorage token.
-  // We won't store it in state (to avoid syncing issues),
-  // but we will force a reload on logout so this recalc is fresh.
+  // Check if user is logged in by presence of token in localStorage
   const isAuthenticated = !!localStorage.getItem('token');
 
-  // Update parent component when selected brands change
+  // When selectedBrands changes, notify parent
   useEffect(() => {
     if (onBrandSelect) {
       onBrandSelect(selectedBrands);
     }
   }, [selectedBrands, onBrandSelect]);
 
-  // Close search dropdown if clicked outside
+  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -58,28 +56,24 @@ const Navbar = ({ onBrandSelect }) => {
 
   const handleBrandToggle = (brandName) => {
     setSelectedBrands((prev) => {
-      const updatedBrands = prev.includes(brandName)
+      const updated = prev.includes(brandName)
         ? prev.filter(b => b !== brandName)
         : [...prev, brandName];
 
-      // Redirect to landing page with selected brands as query params
       const queryParams = new URLSearchParams();
-      if (updatedBrands.length > 0) {
-        queryParams.set('brand', updatedBrands.join(','));
+      if (updated.length > 0) {
+        queryParams.set('brand', updated.join(','));
       }
       navigate(`/?${queryParams.toString()}`);
-      return updatedBrands;
+      return updated;
     });
     setIsSearchFocused(false);
   };
 
   const handleProfileClick = () => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      // If logged in, go to profile
+    if (isAuthenticated) {
       navigate('/profile');
     } else {
-      // Otherwise, open Auth modal
       setIsAuthModalOpen(true);
     }
   };
@@ -88,21 +82,20 @@ const Navbar = ({ onBrandSelect }) => {
     navigate('/');
   };
 
+  // ←-- Updated this handler:
   const handleBidClick = () => {
-    navigate('/list-auction');
+    if (isAuthenticated) {
+      navigate('/list-auction');
+    } else {
+      setIsAuthModalOpen(true);
+    }
   };
 
   const handleLogout = () => {
-    // 1. Remove all stored auth info
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('userId');
-    // (Remove any other keys you might have saved, e.g. email or refresh tokens.)
-
-    // 2. Navigate to home
     navigate('/');
-
-    // 3. Force a reload so that Navbar re‐mounts and hides the Logout button
     window.location.reload();
   };
 
@@ -125,7 +118,7 @@ const Navbar = ({ onBrandSelect }) => {
           gap: '1rem'
         }}
       >
-        {/* Logo / Brand Name */}
+        {/* Logo */}
         <motion.h1 
           whileHover={{ scale: 1.05 }}
           style={{ 
@@ -259,13 +252,13 @@ const Navbar = ({ onBrandSelect }) => {
             👤
           </motion.span>
 
-          {/* Bid/List Item Icon */}
+          {/* List Item for Auction Icon */}
           <motion.span
             whileHover={{ scale: 1.2, rotate: 5 }}
             whileTap={{ scale: 0.95 }}
             style={{ cursor: 'pointer' }}
             onClick={handleBidClick}
-            title="List Item for Auction"
+            title={isAuthenticated ? "List Item for Auction" : "Sign In / Sign Up"}
           >
             💰
           </motion.span>
