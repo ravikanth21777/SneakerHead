@@ -31,7 +31,12 @@ const AuthModal = ({ isOpen, onClose }) => {
     // Example: Store the token if backend sends it
     // localStorage.setItem('token', response.data.token);
     // Optionally store the token
-    localStorage.setItem('token', response.data.token);
+      const { _id, token, username } = response.data;
+
+      // ✏️ STORE both token and userId:
+      localStorage.setItem('token', token);
+      localStorage.setItem('userId', _id);
+      localStorage.setItem('username', username);
 
     alert(isLogin ? 'Logged in successfully!' : 'Registered successfully!');
     navigate('/profile'); // 👈 Redirect after success

@@ -4,11 +4,22 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
-import { ChevronLeft, ChevronRight, Heart, Share2, Clock, Users, Info } from 'lucide-react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Share2,
+  Clock,
+  Users,
+  Info
+} from 'lucide-react';
 
 const ProductDescription = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  // 0️⃣ Grab logged‐in user ID from localStorage (string or null)
+  const loggedInUserId = localStorage.getItem('userId');
 
   // 1️⃣ Loading / error / product state
   const [isLoading, setIsLoading] = useState(true);
@@ -18,10 +29,15 @@ const ProductDescription = () => {
 
   // 2️⃣ Carousel and bid states
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [shoeSize, setShoeSize] = useState('UK 7.5');       // you can make this dynamic later
+  const [shoeSize, setShoeSize] = useState('UK 7.5');
   const [bidAmount, setBidAmount] = useState('');
   const [currentBid, setCurrentBid] = useState(0);
-  const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  });
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [totalBids, setTotalBids] = useState(0);
   const [watchers, setWatchers] = useState(0);
@@ -32,24 +48,36 @@ const ProductDescription = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const response = await axios.get(
+          `http://localhost:5000/api/products/${id}`
+        );
         const product = response.data;
 
-        // Save the main product object
         setProductData(product);
-
-        // Initialize bids / watchers / currentBid from product
         setCurrentBid(product.currentBid || product.startBid || 0);
-        setTotalBids(product.bids ? product.bids.length : 0); // if you keep a bids array in schema
-        setWatchers( product.watchersCount || 0 ); // adjust if you track watchers
+        setTotalBids(product.bids ? product.bids.length : 0);
+        setWatchers(product.watchersCount || 0);
 
-        // Build an array of image URLs; if none exist, fallback to a placeholder
-        if (product.productPictureUrls && product.productPictureUrls.length > 0) {
+        if (
+          product.productPictureUrls &&
+          product.productPictureUrls.length > 0
+        ) {
           setImages(product.productPictureUrls);
         } else {
-          setImages(['https://via.placeholder.com/600x600?text=No+Image']);
-          }
+          setImages([
+            'https://via.placeholder.com/600x600?text=No+Image'
+          ]);
+        }
 
+        // Log out the IDs for debugging
+        console.log(
+          '[ProductDescription] loggedInUserId =',
+          loggedInUserId
+        );
+        console.log(
+          '[ProductDescription] sellerId =',
+          product.seller?._id
+        );
       } catch (err) {
         console.error('Error fetching product:', err);
         if (err.response) {
@@ -65,7 +93,7 @@ const ProductDescription = () => {
     };
 
     fetchProduct();
-  }, [id]);
+  }, [id, loggedInUserId]);
 
   // 4️⃣ Countdown “time left” effect
   useEffect(() => {
@@ -75,25 +103,22 @@ const ProductDescription = () => {
       const now = new Date();
       const end = new Date(productData.AuctionEndDate);
       const diffMs = end - now;
-
       if (diffMs <= 0) {
         return { days: 0, hours: 0, minutes: 0, seconds: 0 };
       }
-
       const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const hours = Math.floor(
+        (diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
+      );
       const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
-
       return { days, hours, minutes, seconds };
     };
 
-    // Immediately compute once, then every second
     setTimeLeft(calculateTimeLeft());
     const timerId = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
     }, 1000);
-
     return () => clearInterval(timerId);
   }, [productData]);
 
@@ -104,7 +129,7 @@ const ProductDescription = () => {
       setCurrentBid(bid);
       setTotalBids((prev) => prev + 1);
       setBidAmount('');
-      // TODO: You would also POST this bid to your backend here
+      // TODO: POST this bid to backend
     }
   };
 
@@ -124,7 +149,14 @@ const ProductDescription = () => {
   // 8️⃣ Early returns for loading / error
   if (isLoading) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <div>Loading product…</div>
       </div>
     );
@@ -132,7 +164,14 @@ const ProductDescription = () => {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
         <div>
           <h2>Error: {error}</h2>
           <button
@@ -155,8 +194,31 @@ const ProductDescription = () => {
   }
 
   if (!productData || images.length === 0) {
-    return null; // or a “No Data” message
+    return null;
   }
+
+  // 9️⃣ Determine if the logged-in user is the seller
+  const sellerId = productData.seller?._id;
+  // Make sure both sides are strings before comparing
+  const isSeller =
+    typeof loggedInUserId === 'string' && sellerId === loggedInUserId;
+
+  // 1️⃣0️⃣ Delete‐product handler
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this product?')) {
+      return;
+    }
+    try {
+      const token = localStorage.getItem('token');
+      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      navigate('/');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      alert('Failed to delete product. Make sure you are the seller.');
+    }
+  };
 
   return (
     <div style={{ minHeight: '100vh', background: '#f8f8f8' }}>
@@ -182,9 +244,7 @@ const ProductDescription = () => {
           style={{
             display: 'grid',
             gridTemplateColumns: '1fr',
-            gap: '2rem',
-            // Example media query fallback; if you use a CSS file, move this there
-            // ['@media (min-width: 768px)']: { gridTemplateColumns: '1fr 1fr' }
+            gap: '2rem'
           }}
         >
           {/* Left: Image Gallery */}
@@ -269,7 +329,7 @@ const ProductDescription = () => {
 
           {/* Right: Product Details */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* --- Header: Brand, Name, Model Info --- */}
+            {/* --- Header: Brand, Delete Button, Watchlist & Share --- */}
             <div>
               <div
                 style={{
@@ -279,10 +339,37 @@ const ProductDescription = () => {
                   marginBottom: '0.5rem'
                 }}
               >
-                <span style={{ fontSize: '1.125rem', fontWeight: '600', color: '#666' }}>
+                {/* Brand Name */}
+                <span
+                  style={{
+                    fontSize: '1.125rem',
+                    fontWeight: '600',
+                    color: '#666'
+                  }}
+                >
                   {productData.brand}
                 </span>
-                <div style={{ display: 'flex', gap: '0.5rem' }}>
+
+                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                  {/* Delete Button (only if user is the seller) */}
+                  {isSeller && (
+                    <button
+                      onClick={handleDelete}
+                      style={{
+                        background: '#ff4444',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        padding: '0.4rem 0.8rem',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+
+                  {/* Watchlist Icon */}
                   <button
                     onClick={() => setIsWatchlisted((prev) => !prev)}
                     style={{
@@ -294,8 +381,14 @@ const ProductDescription = () => {
                       transition: 'all 0.3s'
                     }}
                   >
-                    <Heart size={20} fill={isWatchlisted ? '#ff0000' : 'none'} stroke={isWatchlisted ? '#ff0000' : '#666'} />
+                    <Heart
+                      size={20}
+                      fill={isWatchlisted ? '#ff0000' : 'none'}
+                      stroke={isWatchlisted ? '#ff0000' : '#666'}
+                    />
                   </button>
+
+                  {/* Share Icon */}
                   <button
                     style={{
                       padding: '0.5rem',
@@ -310,6 +403,8 @@ const ProductDescription = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Product Name & Details */}
               <h1
                 style={{
                   fontSize: '2rem',
@@ -320,8 +415,14 @@ const ProductDescription = () => {
               >
                 {productData.name}
               </h1>
-              {/* Add extra details if your schema has them (e.g., edition, size, category) */}
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.875rem', color: '#666' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '1rem',
+                  fontSize: '0.875rem',
+                  color: '#666'
+                }}
+              >
                 <span>Edition: {productData.edition || 'N/A'}</span>
                 <span>•</span>
                 <span>Size: {productData.size || 'N/A'}</span>
@@ -339,7 +440,14 @@ const ProductDescription = () => {
                 padding: '1rem'
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  marginBottom: '1rem'
+                }}
+              >
                 <Clock size={20} color="#c53030" />
                 <span style={{ fontWeight: '600', color: '#c53030', fontSize: '1rem' }}>
                   Auction Ending Soon
@@ -428,7 +536,15 @@ const ProductDescription = () => {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem', color: '#666', marginBottom: '0.25rem' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      fontSize: '0.875rem',
+                      color: '#666',
+                      marginBottom: '0.25rem'
+                    }}
+                  >
                     <Users size={16} style={{ marginRight: '0.25rem' }} />
                     {totalBids} bids
                   </div>
@@ -443,7 +559,15 @@ const ProductDescription = () => {
                     Your Bid Amount
                   </div>
                   <div style={{ position: 'relative', marginBottom: '1rem' }}>
-                    <span style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: '#666' }}>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: '0.75rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        color: '#666'
+                      }}
+                    >
                       ₹
                     </span>
                     <input
@@ -494,7 +618,14 @@ const ProductDescription = () => {
                 padding: '1rem'
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '1rem'
+                }}
+              >
                 <h3 style={{ fontWeight: '600', color: '#333' }}>Size</h3>
                 <button
                   style={{
@@ -519,11 +650,24 @@ const ProductDescription = () => {
                   textAlign: 'center'
                 }}
               >
-                <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#333' }}>
+                <span
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '700',
+                    color: '#333'
+                  }}
+                >
                   {shoeSize}
                 </span>
               </div>
-              <div style={{ marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div
+                style={{
+                  marginTop: '1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
                 <Info size={20} color="#666" />
                 <span style={{ fontSize: '0.875rem', color: '#666' }}>
                   Fits True to Size – Recommended to go with your true size
@@ -538,7 +682,7 @@ const ProductDescription = () => {
                 border: '1px solid #eee',
                 borderRadius: '0.5rem',
                 padding: '1rem'
-              }}  
+              }}
             >
               <h3 style={{ fontWeight: '600', marginBottom: '1rem' }}>Seller Information</h3>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -616,7 +760,9 @@ const ProductDescription = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span>Buy Now Price:</span>
                   <span>
-                    {productData.buyNowPrice ? formatPrice(productData.buyNowPrice) : 'N/A'}
+                    {productData.buyNowPrice
+                      ? formatPrice(productData.buyNowPrice)
+                      : 'N/A'}
                   </span>
                 </div>
               </div>
