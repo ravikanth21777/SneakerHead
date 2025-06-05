@@ -1,9 +1,39 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
+  const [timeLeft, setTimeLeft] = useState("");
+
+  useEffect(() => {
+    if (!product.AuctionEndDate) return;
+
+    const calculateTimeLeft = () => {
+      const end = new Date(product.AuctionEndDate);
+      const now = new Date();
+      const diff = end - now;
+      
+      if (diff <= 0) return "Auction Ended";
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      if (days > 0) return `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+      if (minutes > 0) return `${minutes}m ${seconds}s`;
+      return `${seconds}s`;
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [product.AuctionEndDate]);
 
   const handleCardClick = (e) => {
     // Prevent navigation if clicking the Bid button
@@ -107,8 +137,18 @@ const ProductCard = ({ product }) => {
             color: "#ff4444",
             fontWeight: "600"
           }}>
-            Time Left: {product.timeLeft || "N/A"}
+            Time Left: {timeLeft || "N/A"}
           </p>
+          {product.AuctionEndDate && (
+            <p style={{ 
+              margin: 0,
+              fontSize: "0.8rem",
+              color: "#666",
+              fontStyle: "italic"
+            }}>
+              Ends: {new Date(product.AuctionEndDate).toLocaleString()}
+            </p>
+          )}
         </div>
         
         <div style={{ 
