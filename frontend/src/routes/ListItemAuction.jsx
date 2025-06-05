@@ -290,6 +290,7 @@ const ListItemAuction = () => {
           size: formData.size,
           category: formData.category,
           startBid: parseFloat(formData.startingBid),
+          // Convert local datetime to UTC
           AuctionEndDate: new Date(formData.auctionDuration).toISOString(),
           bidIncrement: formData.bidIncrement ? parseFloat(formData.bidIncrement) : undefined,
           buyNowPrice: formData.buyItNowPrice ? parseFloat(formData.buyItNowPrice) : undefined,
@@ -657,6 +658,7 @@ const ListItemAuction = () => {
                       name="auctionDuration"
                       value={formData.auctionDuration}
                       onChange={handleInputChange}
+                      min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)}
                       required
                       style={styles.input}
                     />
