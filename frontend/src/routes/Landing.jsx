@@ -63,121 +63,143 @@ const Landing = () => {
     fetchProducts();
   }, []);
 
-  // 5️⃣ Once products are loaded, open a single global socket and listen for newBid
-  useEffect(() => {
-    // Only initialize socket after the first successful fetch
-    if (products.length === 0) return;
-
-    // Create socket (global)
-    const socket = io('http://localhost:5000', { transports: ['websocket'] });
-    socketRef.current = socket;
-
-    // Listen for global newBid events
-    socket.on('newBid', (payload) => {
-      // payload = { productId, currentBid, bidder }
-      setProducts((prevProducts) =>
-        prevProducts.map((prod) => {
-          if (prod._id.toString() === payload.productId) {
-            return { ...prod, currentBid: payload.currentBid };
-          }
-          return prod;
-        })
-      );
-    });
-
-    // Clean up on unmount
-    return () => {
-      socket.disconnect();
-    };
-  }, [products]);
-
   // Socket effect for real-time updates
   useEffect(() => {
-    // Create socket instance
+    if (products.length === 0) {
+      console.log('⏳ Waiting for products to load before initializing sockets...');
+      return;
+    }
+
+    console.log('🔌 Initializing socket connection...');
+
+    // Create socket instance with reconnection settings
     const socket = io('http://localhost:5000', {
       transports: ['websocket'],
       reconnectionAttempts: 5,
-      reconnectionDelay: 1000
+      reconnectionDelay: 1000,
+      debug: true
     });
 
     // Store socket in ref
     socketRef.current = socket;
 
+    // Debug all incoming socket events
+    socket.onAny((event, ...args) => {
+      console.log('📨 Socket event received:', event, 'with data:', args);
+    });
+
     // Handle connection events
     socket.on('connect', () => {
-      console.log('Socket connected successfully');
+      console.log('✅ Socket connected successfully', socket.id);
+      
+      // Join global updates room
+      console.log('🌐 Joining global updates room...');
+      socket.emit('joinGlobalRoom');
+      
+      console.log('🔄 Current socket state:', {
+        id: socket.id,
+        connected: socket.connected,
+        disconnected: socket.disconnected
+      });
+    });
+
+    // Confirm global room join
+    socket.on('globalRoomJoined', (data) => {
+      console.log('✅ Global room join confirmed:', data);
     });
 
     socket.on('connect_error', (error) => {
-      console.error('Socket connection error:', error);
-    });    // Handle new bid events
-  const handleNewBid = async (data) => {
-    console.log('Received new bid event:', data);
-    
-    // Immediate partial update for responsiveness
-    setProducts(currentProducts => {
-      return currentProducts.map(product => {
-        if (product._id === data.productId) {
-          return {
-            ...product,
-            currentBid: Number(data.currentBid),
-            buyer: data.bidder,
-            ...(data.endDate && { AuctionEndDate: data.endDate })
-          };
-        }
-        return product;
+      console.error('❌ Socket connection error:', error);
+      console.log('Current socket state:', {
+        id: socket.id,
+        connected: socket.connected,
+        disconnected: socket.disconnected
       });
     });
-    
-    // Fetch fresh data for the updated product
-    try {
-      const response = await axios.get(`http://localhost:5000/api/products/${data.productId}`);
-      if (response.data) {
-        setProducts(currentProducts => {
-          return currentProducts.map(product => {
-            if (product._id === data.productId) {
-              return response.data;
-            }
-            return product;
-          });
-        });
-      }
-    } catch (err) {
-      console.error('Error fetching updated product:', err);
-    }
-    };
 
-    // Handle auction ended events
-    const handleAuctionEnded = (data) => {
-      console.log('Auction ended event:', data);
-      setProducts(currentProducts => {
-        return currentProducts.map(product => {
+    // Handle global bid updates with enhanced logging
+    const handleGlobalBidUpdate = async (data) => {
+      console.log('🌐 Received global bid update:', data);
+      
+      if (!data || !data.productId) {
+        console.error('❌ Invalid global bid data received:', data);
+        return;
+      }
+
+      // Get the bid amount from the correct property
+      const newBidAmount = Number(data.currentBid || data.amount);
+      
+      if (isNaN(newBidAmount)) {
+        console.error('❌ Invalid bid amount:', data);
+        return;
+      }
+
+      console.log('💰 Processing bid update:', {
+        productId: data.productId,
+        newBidAmount: newBidAmount
+      });
+
+      // Update product in state
+      setProducts(prevProducts => {
+        console.log('🔄 Updating products state with new bid');
+        return prevProducts.map(product => {
           if (product._id === data.productId) {
-            return {
-              ...product,
-              auctionEnded: true,
-              currentBid: Number(data.finalBid),
-              buyer: data.winner
-            };
+            console.log(`✨ Updating product ${product._id}:`, {
+              oldBid: product.currentBid,
+              newBid: newBidAmount
+            });
+            
+            // Only update if the new bid is higher
+            if (newBidAmount > (product.currentBid || 0)) {
+              return {
+                ...product,
+                currentBid: newBidAmount,
+                buyer: data.bidder || data.userId,
+                ...(data.endDate && { AuctionEndDate: data.endDate }),
+                isUpdating: true
+              };
+            }
+            console.log('ℹ️ Ignoring lower bid amount');
+            return product;
           }
           return product;
         });
       });
+
+      // Reset animation after delay
+      setTimeout(() => {
+        console.log('🔄 Resetting animation state for product:', data.productId);
+        setProducts(prevProducts => {
+          return prevProducts.map(product => {
+            if (product._id === data.productId) {
+              return { ...product, isUpdating: false };
+            }
+            return product;
+          });
+        });
+      }, 500);
     };
 
-    socket.on('newBid', handleNewBid);
-    socket.on('auctionEnded', handleAuctionEnded);
-
+    // Listen for both global and specific updates
+    console.log('👂 Setting up event listeners...');
+    
+    socket.on('globalBidUpdate', handleGlobalBidUpdate);
+    socket.on('newBid', (data) => console.log('📢 Received newBid event:', data));
+    socket.on('bidPlaced', (data) => console.log('📢 Received bidPlaced event:', data));
+    
     // Cleanup on unmount
     return () => {
+      console.log('🧹 Cleaning up socket connection...');
       if (socket) {
-        socket.off('newBid', handleNewBid);
-        socket.off('auctionEnded', handleAuctionEnded);
+        console.log('Removing event listeners and disconnecting socket:', socket.id);
+        socket.off('globalBidUpdate', handleGlobalBidUpdate);
+        socket.off('newBid');
+        socket.off('bidPlaced');
         socket.disconnect();
       }
       socketRef.current = null;
     };
-  }, []); // Empty dependency array as we want this to run only once
+  }, [products.length]); // Only re-run if products array length changes
 
   // 6️⃣ Filter by selectedBrands (empty array = show all)
   const filteredProducts = products.filter((prod) => {
@@ -302,11 +324,14 @@ const Landing = () => {
                   key={sneaker._id}
                   product={{
                     id: sneaker._id,
+                    _id: sneaker._id, // Add this to ensure ID matching works
                     name: sneaker.name,
                     brand: sneaker.brand,
                     currentBid: sneaker.currentBid || sneaker.startBid || 0,
-                    basePrice: sneaker.startBid || 0,
+                    startBid: sneaker.startBid || 0,
                     AuctionEndDate: sneaker.AuctionEndDate,
+                    auctionEnded: sneaker.auctionEnded,
+                    isUpdating: sneaker.isUpdating,
                     image:
                       sneaker.productPictureUrls && sneaker.productPictureUrls.length > 0
                         ? sneaker.productPictureUrls[0]

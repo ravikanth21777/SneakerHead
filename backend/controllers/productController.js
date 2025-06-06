@@ -47,12 +47,16 @@ exports.getProductById = async (req, res) => {
 // Place a Bid
 exports.placeBid = async (req, res) => {
   try {
+    console.log('🎯 Bid placement started');
     const { amount } = req.body;
     const productId = req.params.id;
     
+    console.log('📦 Bid details:', { productId, amount, userId: req.user._id });
+
     // Find the product and validate
     let product = await Product.findById(productId);
     if (!product) {
+      console.log('❌ Product not found:', productId);
       return res.status(404).json({ message: 'Product not found' });
     }
 
@@ -76,37 +80,44 @@ exports.placeBid = async (req, res) => {
     product.currentBid = Number(amount);
     product.buyer = req.user._id;
 
-    // Check if auction is ending soon (within 30 seconds)
-    const timeToEnd = new Date(product.AuctionEndDate) - now;
-    if (timeToEnd <= 30000) { // 30 seconds or less
-      // Extend auction by 30 seconds if bid is placed near the end
-      const newEndDate = new Date(now.getTime() + 30000);
-      product.AuctionEndDate = newEndDate;
-    }
-
     await product.save();
+    console.log('💾 Product updated with new bid');
 
     // Fetch fresh product data with populated fields
-    product = await Product.findById(productId)
+    const updatedProduct = await Product.findById(productId)
       .populate('seller', 'username')
       .populate('buyer', 'username');
 
     // Prepare socket payload
     const payload = {
-      productId: product._id.toString(),
+      productId: updatedProduct._id.toString(),
       currentBid: Number(amount),
       bidder: req.user._id.toString(),
-      endDate: product.AuctionEndDate,
-      updatedProduct: product
+      endDate: updatedProduct.AuctionEndDate,
+      updatedProduct: updatedProduct
     };
-    
-    // Emit to all clients in the product room
-    const io = req.app.locals.io;
-    io.in(productId).emit('newBid', payload);
 
-    return res.json(product);
+    console.log('🚀 Emitting socket events with payload:', payload);
+    
+    // Get socket.io instance
+    const io = req.app.locals.io;
+    
+    // Emit to product room
+    console.log('📢 Emitting to product room:', productId);
+    io.to(productId).emit('newBid', payload);
+    
+    // Emit to global room
+    console.log('🌐 Emitting to global room');
+    io.to('globalUpdates').emit('globalBidUpdate', payload);
+    
+    // Also emit to all connected clients as fallback
+    console.log('📣 Emitting to all clients');
+    io.emit('globalBidUpdate', payload);
+
+    console.log('✅ Bid placement completed');
+    return res.json(updatedProduct);
   } catch (error) {
-    console.error('Error placing bid:', error);
+    console.error('❌ Error in placeBid:', error);
     return res.status(500).json({ message: 'Server error while placing bid' });
   }
 };
