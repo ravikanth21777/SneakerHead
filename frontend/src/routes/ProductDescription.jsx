@@ -1,8 +1,9 @@
 // src/routes/ProductDescription.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { io } from 'socket.io-client';
 import Navbar from '../components/Navbar';
 import {
   ChevronLeft,
@@ -14,9 +15,12 @@ import {
   Info
 } from 'lucide-react';
 
+// Socket.io instance will be created in useEffect
+
 const ProductDescription = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const socketRef = useRef(null);
 
   // 0️⃣ Grab logged‐in user ID from localStorage (string or null)
   const loggedInUserId = localStorage.getItem('userId');
@@ -41,6 +45,7 @@ const ProductDescription = () => {
   const [isWatchlisted, setIsWatchlisted] = useState(false);
   const [totalBids, setTotalBids] = useState(0);
   const [watchers, setWatchers] = useState(0);
+  const [isAuctionEnded, setIsAuctionEnded] = useState(false);
 
   // 3️⃣ Fetch product once on mount
   useEffect(() => {
@@ -58,6 +63,11 @@ const ProductDescription = () => {
         setTotalBids(product.bids ? product.bids.length : 0);
         setWatchers(product.watchersCount || 0);
 
+        // Check auction status when product data is loaded
+        if (product.auctionEnded || new Date() >= new Date(product.AuctionEndDate)) {
+          setIsAuctionEnded(true);
+        }
+
         if (
           product.productPictureUrls &&
           product.productPictureUrls.length > 0
@@ -69,7 +79,7 @@ const ProductDescription = () => {
           ]);
         }
 
-        // Log out the IDs for debugging
+        // (Debugging) Log out the IDs for confirmation
         console.log(
           '[ProductDescription] loggedInUserId =',
           loggedInUserId
@@ -115,6 +125,7 @@ const ProductDescription = () => {
       return { days, hours, minutes, seconds };
     };
 
+    // Immediately compute, then update every second
     setTimeLeft(calculateTimeLeft());
     const timerId = setInterval(() => {
       setTimeLeft(calculateTimeLeft());
@@ -122,14 +133,193 @@ const ProductDescription = () => {
     return () => clearInterval(timerId);
   }, [productData]);
 
+  // Socket Effect for real-time updates
+  useEffect(() => {
+    if (!id) return;
+
+    console.log('Initializing socket connection for product:', id);
+    
+    // Create socket instance
+    const socket = io('http://localhost:5000', {
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+
+    // Store socket in ref for access in other functions
+    socketRef.current = socket;
+
+    // Handle connection events
+    socket.on('connect', () => {
+      console.log('Socket connected successfully');
+      socket.emit('joinRoom', id);
+      console.log('Joined room:', id);
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+      alert('Error connecting to real-time updates. Some features may be delayed.');
+    });
+
+    // Handle new bids
+    const handleNewBid = async (data) => {
+      console.log('Received new bid event:', data);
+      if (data.productId === id) {
+        console.log('Updating bid amount to:', data.currentBid);
+        
+        // Immediate bid amount update for responsiveness
+        setCurrentBid(Number(data.currentBid));
+        setTotalBids(prev => prev + 1);
+        
+        try {
+          // Always fetch fresh data to ensure consistency
+          const response = await axios.get(`http://localhost:5000/api/products/${id}`);
+          const updatedProduct = response.data;
+          
+          if (updatedProduct) {
+            setProductData(updatedProduct);
+            // Update current bid if the fetched data has a higher bid
+            if (updatedProduct.currentBid > Number(data.currentBid)) {
+              setCurrentBid(updatedProduct.currentBid);
+            }
+            // Check if the auction end time was extended
+            if (data.endDate) {
+              const newEndDate = new Date(data.endDate);
+              const currentEndDate = new Date(updatedProduct.AuctionEndDate);
+              if (newEndDate > currentEndDate) {
+                setProductData(prev => ({
+                  ...prev,
+                  AuctionEndDate: data.endDate
+                }));
+              }
+            }
+          }
+        } catch (err) {
+          console.error('Error fetching updated product:', err);
+        }
+
+        // Check auction status
+        checkAuctionStatus();
+
+        // Show notification for others' bids
+        if (data.bidder !== loggedInUserId) {
+          alert(`New bid placed: ${formatPrice(data.currentBid)}`);
+        }
+      }
+    };
+
+    socket.on('newBid', handleNewBid);
+
+    // Cleanup
+    return () => {
+      console.log('Leaving room:', id);
+      socket.off('newBid', handleNewBid);
+      if (socket.connected) {
+        socket.emit('leaveRoom', id);
+        socket.disconnect();
+      }
+      socketRef.current = null;
+    };
+  }, [id, loggedInUserId]);
+
+  // Check auction status function
+  const checkAuctionStatus = useCallback(() => {
+    if (!productData) return;
+    
+    const now = new Date();
+    const endDate = new Date(productData.AuctionEndDate);
+    
+    if (now >= endDate || productData.auctionEnded) {
+      setIsAuctionEnded(true);
+      // Show auction ended message if you're the winner
+      if (productData.buyer && productData.buyer._id === loggedInUserId) {
+        alert('Congratulations! You won this auction!');
+      }
+    }
+  }, [productData, loggedInUserId]);
+
   // 5️⃣ Bid submission handler
-  const handleBidSubmit = () => {
-    const bid = parseFloat(bidAmount.replace(/,/g, ''));
-    if (bid > currentBid) {
-      setCurrentBid(bid);
-      setTotalBids((prev) => prev + 1);
-      setBidAmount('');
-      // TODO: POST this bid to backend
+  const handleBidSubmit = async () => {
+    try {
+      // Validate auction status first
+      if (isAuctionEnded) {
+        alert('This auction has ended');
+        return;
+      }
+
+      // Parse and validate bid amount
+      const bid = parseFloat(bidAmount.replace(/,/g, ''));
+      const minBid = (currentBid || 0) + (productData.bidIncrement || 0);
+
+      // Validation checks
+      if (!bidAmount || bidAmount.trim() === '') {
+        alert('Please enter a bid amount');
+        return;
+      }
+
+      if (isNaN(bid)) {
+        alert('Please enter a valid number');
+        return;
+      }
+
+      if (bid < minBid) {
+        alert(`Bid must be at least ${formatPrice(minBid)}`);
+        return;
+      }
+
+      if (!productData) {
+        alert('Product data is not available');
+        return;
+      }
+
+      // Check if auction has ended
+      const now = new Date();
+      const endDate = new Date(productData.AuctionEndDate);
+      if (now > endDate) {
+        alert('This auction has ended');
+        return;
+      }
+
+      console.log('Submitting bid:', bid);
+      const token = localStorage.getItem('token');
+      const response = await axios.put(
+        `http://localhost:5000/api/products/${id}/bid`,
+        { amount: bid },
+        { headers: { Authorization: `Bearer ${token}` }}
+      );
+
+      console.log('Bid response:', response.data);
+      if (response.data) {
+        setBidAmount('');
+        setProductData(response.data);
+        
+        // Ensure we use number type for current bid
+        const updatedBid = Number(response.data.currentBid);
+        if (!isNaN(updatedBid) && updatedBid > 0) {
+          setCurrentBid(updatedBid);
+          setTotalBids(prev => prev + 1);
+        }
+        
+        // Check auction status and handle socket update
+        checkAuctionStatus();
+
+        // Emit bid event through socket if connected
+        if (socketRef.current?.connected) {
+          socketRef.current.emit('placeBid', {
+            productId: id,
+            amount: bid,
+            userId: loggedInUserId,
+            currentBid: response.data.currentBid
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error placing bid:', error);
+      if (error.response?.data?.message) {
+        alert(error.response.data.message);
+      } else {
+        alert('Error placing bid. Please try again.');
+      }
     }
   };
 
@@ -143,7 +333,8 @@ const ProductDescription = () => {
 
   // 7️⃣ Price formatter helper
   const formatPrice = (price) => {
-    return `₹${price.toLocaleString('en-IN')}`;
+    if (price === undefined || price === null) return '₹0';
+    return `₹${Number(price).toLocaleString('en-IN')}`;
   };
 
   // 8️⃣ Early returns for loading / error
@@ -197,9 +388,9 @@ const ProductDescription = () => {
     return null;
   }
 
-  // 9️⃣ Determine if the logged-in user is the seller
+  // 9️⃣ Check if the logged‐in user is the seller
   const sellerId = productData.seller?._id;
-  // Make sure both sides are strings before comparing
+  // Compare as strings (both are strings when retrieved)
   const isSeller =
     typeof loggedInUserId === 'string' && sellerId === loggedInUserId;
 
@@ -238,6 +429,35 @@ const ProductDescription = () => {
         >
           {productData.name}
         </h1>
+
+        {/* Auction Status Banner */}
+        {isAuctionEnded && (
+          <div
+            style={{
+              background: '#fee2e2',
+              border: '1px solid #ef4444',
+              borderRadius: '0.5rem',
+              padding: '1rem',
+              marginBottom: '1rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span style={{ color: '#b91c1c', fontWeight: '600' }}>
+              Auction Ended
+            </span>
+            {productData.buyer && productData.buyer._id === loggedInUserId ? (
+              <span style={{ color: '#15803d', marginLeft: 'auto' }}>
+                Congratulations! You won this auction!
+              </span>
+            ) : productData.buyer ? (
+              <span style={{ color: '#666', marginLeft: 'auto' }}>
+                Won by: {productData.buyer.username}
+              </span>
+            ) : null}
+          </div>
+        )}
 
         {/* Grid: image gallery on left, details on right */}
         <div
@@ -594,18 +814,24 @@ const ProductDescription = () => {
                 </div>
                 <button
                   onClick={handleBidSubmit}
+                  disabled={isAuctionEnded}
                   style={{
-                    background: '#333',
+                    background: isAuctionEnded ? '#ccc' : '#333',
                     color: '#fff',
                     padding: '0.75rem',
                     borderRadius: '0.5rem',
                     fontWeight: '600',
-                    cursor: 'pointer',
+                    cursor: isAuctionEnded ? 'not-allowed' : 'pointer',
                     transition: 'background 0.3s'
                   }}
                 >
-                  Place Bid
+                  {isAuctionEnded ? 'Auction Ended' : 'Place Bid'}
                 </button>
+                {!isAuctionEnded && timeLeft.days === 0 && timeLeft.hours === 0 && timeLeft.minutes < 5 && (
+                  <div style={{ color: '#dc2626', fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                    ⚠️ Auction ending soon! Any bids in the last 30 seconds will extend the auction.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -650,13 +876,7 @@ const ProductDescription = () => {
                   textAlign: 'center'
                 }}
               >
-                <span
-                  style={{
-                    fontSize: '1.25rem',
-                    fontWeight: '700',
-                    color: '#333'
-                  }}
-                >
+                <span style={{ fontSize: '1.25rem', fontWeight: '700', color: '#333' }}>
                   {shoeSize}
                 </span>
               </div>

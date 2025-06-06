@@ -1,0 +1,52 @@
+// src/routes/ProductDescription.jsx
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { io } from 'socket.io-client';
+import Navbar from '../components/Navbar';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Share2,
+  Clock,
+  Users,
+  Info
+} from 'lucide-react';
+
+// Create socket instance
+const socket = io('http://localhost:5000');
+
+const ProductDescription = () => {
+  // ... existing state and hooks ...
+
+  // Add socket event listeners
+  useEffect(() => {
+    if (!id) return;
+
+    // Join the room for this product
+    socket.emit('joinRoom', id);
+
+    // Listen for new bids
+    socket.on('newBid', (data) => {
+      if (data.productId === id) {
+        setCurrentBid(data.currentBid);
+        setTotalBids(prev => prev + 1);
+        
+        // If someone else made the bid, show a notification
+        if (data.bidder !== loggedInUserId) {
+          alert('New bid placed! Current bid is now ' + formatPrice(data.currentBid));
+        }
+      }
+    });
+
+    return () => {
+      // Leave the room when component unmounts
+      socket.emit('leaveRoom', id);
+      // Clean up listeners
+      socket.off('newBid');
+    };
+  }, [id, loggedInUserId]);
+
+  // Rest of your component code...

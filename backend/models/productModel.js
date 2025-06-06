@@ -31,6 +31,10 @@ const productSchema  = mongoose.Schema(
             type:Number,
             require:[true,'please add some starting bid'],
         },
+        currentBid:{
+            type:Number,
+            default: 0
+        },
         AuctionEndDate:{
             type:Date,
             require:[true,'please add some date and time'],
@@ -57,7 +61,14 @@ const productSchema  = mongoose.Schema(
             type:String,
             default : '' ,
         }],
-
+        currentBid: {
+            type: Number,
+            default: 0
+        },
+        auctionEnded: {
+            type: Boolean,
+            default: false
+        }
     },
     {
         timestamps:true 

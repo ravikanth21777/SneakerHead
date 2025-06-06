@@ -5,6 +5,15 @@ import { useNavigate } from 'react-router-dom';
 const ProductCard = ({ product }) => {
   const navigate = useNavigate();
   const [timeLeft, setTimeLeft] = useState("");
+  const [currentBid, setCurrentBid] = useState(product.currentBid || product.startBid || 0);
+  const [isAuctionEnded, setIsAuctionEnded] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Update local state when product prop changes
+  useEffect(() => {
+    setCurrentBid(product.currentBid || product.startBid || 0);
+    setIsAuctionEnded(product.auctionEnded || new Date() > new Date(product.AuctionEndDate));
+  }, [product.currentBid, product.startBid, product.auctionEnded, product.AuctionEndDate]);
 
   useEffect(() => {
     if (!product.AuctionEndDate) return;
@@ -27,13 +36,51 @@ const ProductCard = ({ product }) => {
       return `${seconds}s`;
     };
 
-    setTimeLeft(calculateTimeLeft());
+    const updateTimeAndStatus = () => {
+      const newTimeLeft = calculateTimeLeft();
+      setTimeLeft(newTimeLeft);
+      
+      // Check if auction has ended
+      if (newTimeLeft === "Auction Ended") {
+        setIsAuctionEnded(true);
+      }
+    };
+
+    updateTimeAndStatus();
     const timer = setInterval(() => {
+      updateTimeAndStatus();
       setTimeLeft(calculateTimeLeft());
     }, 1000);
 
     return () => clearInterval(timer);
   }, [product.AuctionEndDate]);
+
+  // Animation variants for price updates
+  const priceAnimation = {
+    highlight: {
+      backgroundColor: 'rgba(255, 220, 220, 0.5)',
+      transition: { duration: 0.3 }
+    },
+    normal: {
+      backgroundColor: 'transparent',
+      transition: { duration: 0.3 }
+    }
+  };
+
+  // Handle bid updates with animation
+  useEffect(() => {
+    if (product.currentBid !== currentBid) {
+      setIsUpdating(true);
+      setCurrentBid(product.currentBid || product.startBid || 0);
+      
+      // Reset updating state after animation
+      const timer = setTimeout(() => {
+        setIsUpdating(false);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [product.currentBid, product.startBid, currentBid]);
 
   const handleCardClick = (e) => {
     // Prevent navigation if clicking the Bid button
@@ -115,21 +162,29 @@ const ProductCard = ({ product }) => {
           gap: "0.5rem",
           marginBottom: "0.5rem"
         }}>
+          <motion.p
+            animate={isUpdating ? "highlight" : "normal"}
+            variants={priceAnimation}
+            style={{ 
+              margin: 0,
+              padding: "0.25rem",
+              borderRadius: "0.25rem",
+              fontSize: "0.9rem",
+              color: "#666",
+              fontWeight: "600"
+            }}
+          >
+            Current Bid: <span style={{ color: isUpdating ? "#ff4444" : "#333" }}>
+              ₹{currentBid.toLocaleString('en-IN')}
+            </span>
+          </motion.p>
           <p style={{ 
             margin: 0,
             fontSize: "0.9rem",
             color: "#666",
             fontWeight: "500"
           }}>
-            Current Bid: ₹{product.currentBid || "0"}
-          </p>
-          <p style={{ 
-            margin: 0,
-            fontSize: "0.9rem",
-            color: "#666",
-            fontWeight: "500"
-          }}>
-            Base Price: ₹{product.basePrice || "0"}
+            Starting Price: ₹{product.startBid?.toLocaleString('en-IN') || "0"}
           </p>
           <p style={{ 
             margin: 0,

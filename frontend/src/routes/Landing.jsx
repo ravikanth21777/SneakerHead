@@ -1,8 +1,9 @@
 // src/routes/Landing.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
+import io from 'socket.io-client';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
 
@@ -29,14 +30,16 @@ const Landing = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // 3️⃣ Fetch live products from backend on component mount
+  // 3️⃣ Ref to hold the socket instance
+  const socketRef = useRef(null);
+
+  // 4️⃣ Fetch live products from backend on component mount
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Use full URL so we avoid proxy issues
         const response = await axios.get('http://localhost:5000/api/products');
         console.log('Fetched products:', response.data);
         setProducts(response.data);
@@ -60,12 +63,128 @@ const Landing = () => {
     fetchProducts();
   }, []);
 
-  // 4️⃣ Filter by selectedBrands (empty array = show all)
-  const filteredSneakers = products.filter((sneaker) => {
-    return selectedBrands.length === 0 || selectedBrands.includes(sneaker.brand);
+  // 5️⃣ Once products are loaded, open a single global socket and listen for newBid
+  useEffect(() => {
+    // Only initialize socket after the first successful fetch
+    if (products.length === 0) return;
+
+    // Create socket (global)
+    const socket = io('http://localhost:5000', { transports: ['websocket'] });
+    socketRef.current = socket;
+
+    // Listen for global newBid events
+    socket.on('newBid', (payload) => {
+      // payload = { productId, currentBid, bidder }
+      setProducts((prevProducts) =>
+        prevProducts.map((prod) => {
+          if (prod._id.toString() === payload.productId) {
+            return { ...prod, currentBid: payload.currentBid };
+          }
+          return prod;
+        })
+      );
+    });
+
+    // Clean up on unmount
+    return () => {
+      socket.disconnect();
+    };
+  }, [products]);
+
+  // Socket effect for real-time updates
+  useEffect(() => {
+    // Create socket instance
+    const socket = io('http://localhost:5000', {
+      transports: ['websocket'],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+
+    // Store socket in ref
+    socketRef.current = socket;
+
+    // Handle connection events
+    socket.on('connect', () => {
+      console.log('Socket connected successfully');
+    });
+
+    socket.on('connect_error', (error) => {
+      console.error('Socket connection error:', error);
+    });    // Handle new bid events
+  const handleNewBid = async (data) => {
+    console.log('Received new bid event:', data);
+    
+    // Immediate partial update for responsiveness
+    setProducts(currentProducts => {
+      return currentProducts.map(product => {
+        if (product._id === data.productId) {
+          return {
+            ...product,
+            currentBid: Number(data.currentBid),
+            buyer: data.bidder,
+            ...(data.endDate && { AuctionEndDate: data.endDate })
+          };
+        }
+        return product;
+      });
+    });
+    
+    // Fetch fresh data for the updated product
+    try {
+      const response = await axios.get(`http://localhost:5000/api/products/${data.productId}`);
+      if (response.data) {
+        setProducts(currentProducts => {
+          return currentProducts.map(product => {
+            if (product._id === data.productId) {
+              return response.data;
+            }
+            return product;
+          });
+        });
+      }
+    } catch (err) {
+      console.error('Error fetching updated product:', err);
+    }
+    };
+
+    // Handle auction ended events
+    const handleAuctionEnded = (data) => {
+      console.log('Auction ended event:', data);
+      setProducts(currentProducts => {
+        return currentProducts.map(product => {
+          if (product._id === data.productId) {
+            return {
+              ...product,
+              auctionEnded: true,
+              currentBid: Number(data.finalBid),
+              buyer: data.winner
+            };
+          }
+          return product;
+        });
+      });
+    };
+
+    socket.on('newBid', handleNewBid);
+    socket.on('auctionEnded', handleAuctionEnded);
+
+    // Cleanup on unmount
+    return () => {
+      if (socket) {
+        socket.off('newBid', handleNewBid);
+        socket.off('auctionEnded', handleAuctionEnded);
+        socket.disconnect();
+      }
+      socketRef.current = null;
+    };
+  }, []); // Empty dependency array as we want this to run only once
+
+  // 6️⃣ Filter by selectedBrands (empty array = show all)
+  const filteredProducts = products.filter((prod) => {
+    return selectedBrands.length === 0 || selectedBrands.includes(prod.brand);
   });
 
-  // 5️⃣ Called by Navbar when brand checkboxes change
+  // 7️⃣ Called by Navbar when brand checkboxes change
   const handleBrandSelection = (brands) => {
     setSelectedBrands(brands);
   };
@@ -123,9 +242,7 @@ const Landing = () => {
               : 'All Sneakers'}
           </h2>
           <span style={{ color: '#666', fontSize: '0.9rem' }}>
-            {loading
-              ? 'Loading…'
-              : `(${filteredSneakers.length} products)`}
+            {loading ? 'Loading…' : `(${filteredProducts.length}products)`}
           </span>
         </div>
 
@@ -180,7 +297,7 @@ const Landing = () => {
                 gap: '2rem'
               }}
             >
-              {filteredSneakers.map((sneaker) => (
+              {filteredProducts.map((sneaker) => (
                 <ProductCard
                   key={sneaker._id}
                   product={{
@@ -193,8 +310,7 @@ const Landing = () => {
                     image:
                       sneaker.productPictureUrls && sneaker.productPictureUrls.length > 0
                         ? sneaker.productPictureUrls[0]
-                          : 'https://via.placeholder.com/300x300?text=No+Image'
-
+                        : 'https://via.placeholder.com/300x300?text=No+Image'
                   }}
                 />
               ))}

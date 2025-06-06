@@ -8,7 +8,7 @@ const {
   buyProduct,
   getMyAuctions,
   getMyBids,
-  uploadProductImages,
+  uploadProductImages, 
   deleteProduct
 } = require('../controllers/productController');
 
