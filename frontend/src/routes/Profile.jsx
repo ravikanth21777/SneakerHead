@@ -12,7 +12,8 @@ const Profile = () => {
   const [profileData, setProfileData] = useState({
     username: '',
     email: '',
-    profilePictureUrl: ''
+    profilePictureUrl: '',
+    phone: '',
   });
 
   const [formData, setFormData] = useState(profileData);
@@ -64,6 +65,7 @@ const Profile = () => {
         {
           username: formData.username,
           email: formData.email,
+          phone: formData.phone,
           password: formData.password
         },
         {
@@ -443,6 +445,33 @@ const Profile = () => {
                     type="email"
                     name="email"
                     value={isEditing ? formData.email : profileData.email}
+                    onChange={handleInputChange}
+                    disabled={!isEditing}
+                    style={{
+                      width: '100%',
+                      padding: '0.8rem',
+                      border: '1px solid #ddd',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      background: isEditing ? '#fff' : '#f8f8f8'
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      marginBottom: '0.5rem',
+                      color: '#666'
+                    }}
+                  >
+                    Phone number
+                  </label>
+                  <input
+                    type="phone"
+                    name="phone"
+                    value={isEditing ? formData.phone : profileData.phone}
                     onChange={handleInputChange}
                     disabled={!isEditing}
                     style={{
