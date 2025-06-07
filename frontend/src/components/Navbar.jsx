@@ -49,7 +49,6 @@ const Navbar = ({ onBrandSelect }) => {
         setIsSearchFocused(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
@@ -59,7 +58,6 @@ const Navbar = ({ onBrandSelect }) => {
       const updated = prev.includes(brandName)
         ? prev.filter(b => b !== brandName)
         : [...prev, brandName];
-
       const queryParams = new URLSearchParams();
       if (updated.length > 0) {
         queryParams.set('brand', updated.join(','));
@@ -82,13 +80,17 @@ const Navbar = ({ onBrandSelect }) => {
     navigate('/');
   };
 
-  // ←-- Updated this handler:
   const handleBidClick = () => {
     if (isAuthenticated) {
       navigate('/list-auction');
     } else {
       setIsAuthModalOpen(true);
     }
+  };
+
+  const handleNotificationsClick = () => {
+    // Navigate to notifications page or open notifications panel
+    navigate('/notifications');
   };
 
   const handleLogout = () => {
@@ -105,8 +107,8 @@ const Navbar = ({ onBrandSelect }) => {
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        style={{ 
-          padding: "1rem 1.2rem", 
+        style={{
+          padding: "1rem 1.2rem",
           borderBottom: "1px solid #eee",
           display: "flex",
           justifyContent: "space-between",
@@ -119,12 +121,12 @@ const Navbar = ({ onBrandSelect }) => {
         }}
       >
         {/* Logo */}
-        <motion.h1 
+        <motion.h1
           whileHover={{ scale: 1.05 }}
-          style={{ 
-            margin: 0, 
-            fontWeight: "bold", 
-            fontSize: "1.5rem", 
+          style={{
+            margin: 0,
+            fontWeight: "bold",
+            fontSize: "1.5rem",
             flex: '0 0 auto',
             cursor: 'pointer'
           }}
@@ -134,11 +136,11 @@ const Navbar = ({ onBrandSelect }) => {
         </motion.h1>
 
         {/* Search Bar */}
-        <div 
-          style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }} 
+        <div
+          style={{ position: 'relative', width: '100%', maxWidth: '800px', flex: '1 1 auto' }}
           ref={searchRef}
         >
-          <motion.div 
+          <motion.div
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -166,11 +168,11 @@ const Navbar = ({ onBrandSelect }) => {
               }}
             />
             {selectedBrands.length > 0 && (
-              <span style={{ 
-                color: '#ff4444', 
+              <span style={{
+                color: '#ff4444',
                 marginLeft: '12px',
                 fontSize: '1rem',
-                fontWeight: '500' 
+                fontWeight: '500'
               }}>
                 {selectedBrands.length} selected
               </span>
@@ -201,7 +203,7 @@ const Navbar = ({ onBrandSelect }) => {
               >
                 <div style={{ padding: '1rem' }}>
                   {brands
-                    .filter(brand => 
+                    .filter(brand =>
                       brand.name.toLowerCase().includes(searchQuery.toLowerCase())
                     )
                     .map(brand => (
@@ -235,7 +237,7 @@ const Navbar = ({ onBrandSelect }) => {
         </div>
 
         {/* Icons + Logout */}
-        <motion.div 
+        <motion.div
           variants={staggerContainer}
           initial="initial"
           animate="animate"
@@ -251,6 +253,19 @@ const Navbar = ({ onBrandSelect }) => {
           >
             👤
           </motion.span>
+
+          {/* Notifications Icon (only when logged in) */}
+          {isAuthenticated && (
+            <motion.span
+              whileHover={{ scale: 1.2 }}
+              whileTap={{ scale: 0.95 }}
+              style={{ cursor: 'pointer' }}
+              onClick={handleNotificationsClick}
+              title="Notifications"
+            >
+              🔔
+            </motion.span>
+          )}
 
           {/* List Item for Auction Icon */}
           <motion.span
@@ -287,7 +302,7 @@ const Navbar = ({ onBrandSelect }) => {
       </motion.nav>
 
       {/* Authentication Modal */}
-      <AuthModal 
+      <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
