@@ -47,37 +47,38 @@ const ProductCard = memo(({ product }) => {
 
   // Handle time left updates
   useEffect(() => {
-    if (!product.AuctionEndDate) return;
+  if (!product.AuctionEndDate) return;
 
-    const calculateTimeLeft = () => {
-      const end = new Date(product.AuctionEndDate);
-      const now = new Date();
-      const diff = end - now;
-      
-      if (diff <= 0) {
-        setIsAuctionEnded(true);
-        return "Auction Ended";
-      }
-      
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      
-      if (days > 0) return `${days}d ${hours}h`;
-      if (hours > 0) return `${hours}h ${minutes}m`;
-      if (minutes > 0) return `${minutes}m ${seconds}s`;
-      return `${seconds}s`;
-    };
+  const calculateTimeLeft = () => {
+    const end = new Date(product.AuctionEndDate);
+    const now = new Date();
+    const diff = end - now;
 
-    setTimeLeft(calculateTimeLeft());
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft());
-    }, 1000);
+    if (diff <= 0) {
+      setIsAuctionEnded(true);
+      return "Auction Ended";
+    }
 
-    return () => clearInterval(timer);
-  }, [product.AuctionEndDate]);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+    const parts = [];
+    if (days > 0) parts.push(`${days}d`);
+    if (hours > 0 || days > 0) parts.push(`${hours}h`);
+    if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
+    parts.push(`${seconds}s`);
+
+    return parts.join(" ");
+  };
+
+  const updateTime = () => setTimeLeft(calculateTimeLeft());
+
+  updateTime(); // set immediately
+  const timer = setInterval(updateTime, 1000);
+  return () => clearInterval(timer);
+}, [product.AuctionEndDate]);
   const handleCardClick = (e) => {
     if (!e.target.closest('button')) {
       navigate(`/product/${product.id}`);
