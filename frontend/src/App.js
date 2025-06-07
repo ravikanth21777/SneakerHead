@@ -5,6 +5,7 @@ import Landing from "./routes/Landing";
 import Profile from "./routes/Profile";
 import ProductDescription from "./routes/ProductDescription";
 import ListItemAuction from "./routes/ListItemAuction";
+import OrderSummary from "./routes/OrderSummary";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/product/:id" element={<ProductDescription />} />
         <Route path="/list-auction" element={<ListItemAuction />} />
+         <Route path="/order/:id" element={<OrderSummary />} />
       </Routes>
     </Router>
   );
