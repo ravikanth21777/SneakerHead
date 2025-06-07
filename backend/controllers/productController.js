@@ -155,13 +155,21 @@ exports.buyProduct = async (req, res) => {
 
 // My Auctions
 exports.getMyAuctions = async (req, res) => {
-  const products = await Product.find({ seller: req.user._id });
+  const now = new Date();
+  const products = await Product.find({ 
+    seller: req.user._id,
+    AuctionEndDate: { $lt: now }, 
+  });
   res.json(products);
 };
 
 // My Bids
 exports.getMyBids = async (req, res) => {
-  const products = await Product.find({ buyer: req.user._id });
+  const now = new Date();
+  const products = await Product.find({ 
+    buyer: req.user._id ,
+    AuctionEndDate: { $lt: now },
+  });
   res.json(products);
 };
 
