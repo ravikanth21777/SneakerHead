@@ -39,21 +39,21 @@ exports.uploadProfilePicture = async (req, res) => {
 };
 
 exports.registerUser = async (req, res) => {
-  const { username, email, password } = req.body;
-  if (!username || !email || !password) {
+  const { username, email, phone,password } = req.body;
+  if (!username || !email || !phone || !password) {
     return res.status(400).json({ message: 'All fields are required' });
   }
 
-  if (await (User.findOne({ email })) || await User.findOne({ username })) {
+  if (await (User.findOne({ email })) || await User.findOne({ username }) || await User.findOne({ phone })) {
     return res.status(400).json({ message: 'User already exists' });
   }
 
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
-  const newUser = await User.create({ username, email, password: hashedPassword });
+  const newUser = await User.create({ username, email,phone, password: hashedPassword });
 
   const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '30d' });
-  res.status(201).json({ _id: newUser._id, username: newUser.username, email: newUser.email, token });
+  res.status(201).json({ _id: newUser._id, username: newUser.username, email: newUser.email,phone:newUser.phone , token });
 };
 
 exports.loginUser = async (req, res) => {
@@ -90,20 +90,21 @@ exports.getProfile = async (req, res) => {
 };
 
 exports.updateProfile = async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email,phone, password } = req.body;
   try {
     const user = await User.findById(req.user._id);
     if (!user) return res.status(404).json({ message: 'User not found' });
 
     if (username) user.username = username;
     if (email) user.email = email;
+    if(phone) user.phone = phone;
     if (password) {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
     }
 
     await user.save();
-    res.json({ message: 'Profile updated successfully', user: { _id: user._id, username: user.username, email: user.email } });
+    res.json({ message: 'Profile updated successfully', user: { _id: user._id, username: user.username, email: user.email , phone : user.phone } });
   } catch (err) {
     res.status(500).json({ message: 'Server error' });
   }

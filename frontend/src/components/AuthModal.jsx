@@ -13,24 +13,25 @@ const AuthModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState(''); // Add phone state
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
 
-  try {
-    const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
-    const payload = isLogin
-      ? { email, password }             // For login
-      : { username:name, email, password };
-      console.log('Payload:', payload);     // For signup
+    try {
+      const endpoint = isLogin ? 'http://localhost:5000/api/auth/login' : 'http://localhost:5000/api/auth/register';
+      const payload = isLogin
+        ? { email, password }
+        : { username: name, email, password, phone }; // Add phone to registration payload
+      console.log('Payload:', payload);
 
-    const response = await axios.post(endpoint, payload);
+      const response = await axios.post(endpoint, payload);
 
-    console.log('Server response:', response.data);
+      console.log('Server response:', response.data);
 
-    // Example: Store the token if backend sends it
-    // localStorage.setItem('token', response.data.token);
-    // Optionally store the token
+      // Example: Store the token if backend sends it
+      // localStorage.setItem('token', response.data.token);
+      // Optionally store the token
       const { _id, token, username } = response.data;
 
       // ✏️ STORE both token and userId:
@@ -38,15 +39,16 @@ const AuthModal = ({ isOpen, onClose }) => {
       localStorage.setItem('userId', _id);
       localStorage.setItem('username', username);
 
-    alert(isLogin ? 'Logged in successfully!' : 'Registered successfully!');
-    navigate('/profile'); // 👈 Redirect after success
-    onClose(); // Close the modal
 
-  } catch (err) {
-    console.error('Error:', err.response?.data?.message || err.message);
-    alert(err.response?.data?.message || 'Something went wrong');
-  }
-};
+      alert(isLogin ? 'Logged in successfully!' : 'Registered successfully!');
+      navigate('/profile'); // 👈 Redirect after success
+      onClose(); // Close the modal
+
+    } catch (err) {
+      console.error('Error:', err.response?.data?.message || err.message);
+      alert(err.response?.data?.message || 'Something went wrong');
+    }
+  };
 
   return (
     <AnimatePresence>
@@ -202,6 +204,25 @@ const AuthModal = ({ isOpen, onClose }) => {
                     required
                   />
                 </div>
+
+                {!isLogin && (
+                  <div style={{ marginBottom: '1.5rem' }}>
+                    <input
+                      type="text"
+                      placeholder="Phone Number"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '0.8rem',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
+                        fontSize: '1rem'
+                      }}
+                      required
+                    />
+                  </div>
+                )}
 
                 <button
                   type="submit"
