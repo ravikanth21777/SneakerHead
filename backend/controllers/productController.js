@@ -37,13 +37,19 @@ exports.getProducts = async (req, res) => {
 
 // Get Single Product
 exports.getProductById = async (req, res) => {
-  const product = await Product.findById(req.params.id)
-    .populate('seller', 'username')
-    .populate('buyer', 'username');
-  if (!product) return res.status(404).json({ message: 'Product not found' });
-  res.json(product);
-};
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate('seller', 'username email phone profilePictureUrl') // 👈 Add fields you want
+      .populate('buyer', 'username');
 
+    if (!product) return res.status(404).json({ message: 'Product not found' });
+
+    res.json(product);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 // Place a Bid
 exports.placeBid = async (req, res) => {
   try {

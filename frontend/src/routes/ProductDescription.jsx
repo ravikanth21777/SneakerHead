@@ -589,7 +589,7 @@ const ProductDescription = () => {
                     </button>
                   )}
 
-                  {/* Watchlist Icon */}
+                  {/* Watchlist Icon
                   <button
                     onClick={() => setIsWatchlisted((prev) => !prev)}
                     style={{
@@ -606,9 +606,9 @@ const ProductDescription = () => {
                       fill={isWatchlisted ? '#ff0000' : 'none'}
                       stroke={isWatchlisted ? '#ff0000' : '#666'}
                     />
-                  </button>
+                  </button> */}
 
-                  {/* Share Icon */}
+                  {/* Share Icon
                   <button
                     style={{
                       padding: '0.5rem',
@@ -620,7 +620,7 @@ const ProductDescription = () => {
                     }}
                   >
                     <Share2 size={20} />
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
@@ -895,40 +895,77 @@ const ProductDescription = () => {
               </div>
             </div>
 
-            {/* --- Seller Information --- */}
-            <div
-              style={{
-                background: '#fff',
-                border: '1px solid #eee',
-                borderRadius: '0.5rem',
-                padding: '1rem'
-              }}
-            >
-              <h3 style={{ fontWeight: '600', marginBottom: '1rem' }}>Seller Information</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: '500', color: '#333' }}>
-                    {productData.seller?.username || 'Unknown Seller'}
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>
-                    Rating: {productData.seller?.rating || 'N/A'}
-                  </div>
-                </div>
-                <button
-                  style={{
-                    fontSize: '0.875rem',
-                    color: '#3182ce',
-                    cursor: 'pointer',
-                    background: 'none',
-                    border: 'none',
-                    padding: 0,
-                    margin: 0
-                  }}
-                >
-                  View Profile
-                </button>
-              </div>
-            </div>
+           {/* --- Seller Information --- */}
+<div
+  style={{
+    background: '#fff',
+    border: '1px solid #eee',
+    borderRadius: '0.5rem',
+    padding: '1.25rem 1.5rem',
+    boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+    maxWidth: 400,
+  }}
+>
+  <h3 style={{ fontWeight: '700', marginBottom: '1.25rem', color: '#222' }}>
+    Seller Information
+  </h3>
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      gap: '1.5rem',
+    }}
+  >
+    <div style={{ flex: 1 }}>
+      <div style={{ fontWeight: '600', color: '#222', marginBottom: '0.4rem' }}>
+        Username:
+        <span style={{ fontWeight: '400', marginLeft: '0.5rem' }}>
+          {productData.seller?.username || 'Unknown Seller'}
+        </span>
+      </div>
+      <div style={{ fontWeight: '600', color: '#222', marginBottom: '0.6rem' }}>
+        Phone:
+        <span style={{ fontWeight: '400', marginLeft: '0.5rem' }}>
+          {productData.seller?.phone || 'No phone number available'}
+        </span>
+      </div>
+      <div style={{ fontWeight: '600', color: '#222', marginBottom: '0.6rem' }}>
+        Email:
+        <span style={{ fontWeight: '400', marginLeft: '0.5rem' }}>
+          {productData.seller?.email || 'No email available'}
+        </span>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          fontSize: '0.875rem',
+          color: '#666',
+          gap: '0.75rem',
+        }}
+      >
+        <span>Seller Picture:</span>
+        {productData.seller?.profilePictureUrl ? (
+          <img
+            src={productData.seller.profilePictureUrl}
+            alt="Seller"
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: '50%',
+              border: '1px solid #ddd',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
+          <span style={{ fontStyle: 'italic', color: '#aaa' }}>No image</span>
+        )}
+      </div>
+    </div>
+  </div>
+</div>
+
 
             {/* --- Auction Details --- */}
             <div
@@ -978,12 +1015,7 @@ const ProductDescription = () => {
                   <span>{formatPrice(productData.startBid)}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span>Buy Now Price:</span>
-                  <span>
-                    {productData.buyNowPrice
-                      ? formatPrice(productData.buyNowPrice)
-                      : 'N/A'}
-                  </span>
+                  
                 </div>
               </div>
             </div>
