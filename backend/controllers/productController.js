@@ -1,5 +1,6 @@
 const Product = require('../models/productModel');
 const cloudinary = require('../util/cloudinary');
+const { createNotification } = require('./notificationController');
 
 // Create Product
 exports.createProduct = async (req, res) => {
@@ -87,6 +88,15 @@ exports.placeBid = async (req, res) => {
     product.buyer = req.user._id;
 
     await product.save();
+     console.log('[placeBid] sending notifications');
+  await createNotification(
+    product.seller,
+    `New bid of ₹${amount.toLocaleString()} on "${product.name}"`
+  );
+  await createNotification(
+    req.user._id,
+    `You placed a bid of ₹${amount.toLocaleString()} on "${product.name}"`
+  );
     console.log('💾 Product updated with new bid');
 
     // Fetch fresh product data with populated fields
@@ -142,6 +152,16 @@ exports.buyProduct = async (req, res) => {
   product.auctionEnded = true;
   await product.save();
 
+  await createNotification(
+    req.user._id,
+    `You bought “${product.name}” for ₹${product.buyNowPrice.toLocaleString()}`
+  )
+  await createNotification(
+    product.seller,
+    `Your sneaker “${product.name}” just sold for ₹${product.buyNowPrice.toLocaleString()}`
+  )
+
+ res.json(product);
   // Emit auction ended event
   const io = req.app.locals.io;
   io.in(product._id.toString()).emit('auctionEnded', {

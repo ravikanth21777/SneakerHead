@@ -68,6 +68,11 @@ const productSchema  = mongoose.Schema(
         auctionEnded: {
             type: Boolean,
             default: false
+        }, 
+        
+        isClosed: {
+            type: Boolean,
+            default: false
         }
     },
     {
