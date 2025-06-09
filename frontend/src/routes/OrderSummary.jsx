@@ -101,7 +101,7 @@ const OrderSummary = () => {
               }}
             >
               <ChevronLeft size={24}/>
-            </button>
+            </button> 
             <button
               onClick={nextImage}
               style={{
