@@ -29,9 +29,30 @@ const Landing = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState(''); // Placeholder for future sorting
 
   // 3️⃣ Ref to hold the socket instance
   const socketRef = useRef(null);
+  const sortProducts = (products, sortBy) => {
+  if (!sortBy) return products;
+
+  const sorted = [...products];
+
+  switch (sortBy) {
+    case 'priceLowHigh':
+      return sorted.sort((a, b) => (a.currentBid || a.startBid || 0) - (b.currentBid || b.startBid || 0));
+
+    case 'priceHighLow':
+      return sorted.sort((a, b) => (b.currentBid || b.startBid || 0) - (a.currentBid || a.startBid || 0));
+
+    case 'newestFirst':
+      return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    default:
+      return products;
+  }
+};
+
 
   // 4️⃣ Fetch live products from backend on component mount
   useEffect(() => {
@@ -203,8 +224,11 @@ const Landing = () => {
 
   // 6️⃣ Filter by selectedBrands (empty array = show all)
   const filteredProducts = products.filter((prod) => {
-    return selectedBrands.length === 0 || selectedBrands.includes(prod.brand);
-  });
+  return selectedBrands.length === 0 || selectedBrands.includes(prod.brand);
+});
+
+const sortedFilteredProducts = sortProducts(filteredProducts, sortBy);
+
 
   // 7️⃣ Called by Navbar when brand checkboxes change
   const handleBrandSelection = (brands) => {
@@ -271,6 +295,8 @@ const Landing = () => {
         <h2 style={{ margin: 0, fontSize: '1.5rem' }}>Buy All Sneakers</h2>
 
         <select
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value)}
           style={{
             padding: '0.5rem',
             border: '1px solid #ddd',
@@ -279,9 +305,9 @@ const Landing = () => {
           }}
         >
           <option>Sort By</option>
-          <option>Price: Low to High</option>
-          <option>Price: High to Low</option>
-          <option>Newest First</option>
+          <option value = "priceLowHigh">Price: Low to High</option>
+          <option value = "priceHighLow">Price: High to Low</option>
+          <option value = "priceNewestFirst">Newest First</option>
         </select>
       </motion.div>
 
@@ -319,7 +345,7 @@ const Landing = () => {
                 gap: '2rem'
               }}
             >
-              {filteredProducts.map((sneaker) => (
+              {sortedFilteredProducts.map((sneaker) => (
                 <ProductCard
                   key={sneaker._id}
                   product={{
