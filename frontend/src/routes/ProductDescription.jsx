@@ -46,6 +46,7 @@ const ProductDescription = () => {
   const [totalBids, setTotalBids] = useState(0);
   const [watchers, setWatchers] = useState(0);
   const [isAuctionEnded, setIsAuctionEnded] = useState(false);
+  const [showSizeGuide, setShowSizeGuide] = useState(false);
 
   // 3️⃣ Fetch product once on mount
   useEffect(() => {
@@ -863,9 +864,51 @@ const ProductDescription = () => {
                     padding: 0,
                     margin: 0
                   }}
+                  onClick={() => setShowSizeGuide(true)}
                 >
                   Size Guide
                 </button>
+                {showSizeGuide && (
+                    <div style={{
+                      position: 'fixed',
+                      top: 0,
+                      left: 0,
+                      height: '100vh',
+                      width: '100vw',
+                      backgroundColor: 'rgba(0,0,0,0.5)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      zIndex: 1000
+                    }}>
+                      <div style={{
+                        background: 'white',
+                        padding: '20px',
+                        borderRadius: '8px',
+                        maxWidth: '90%',
+                        maxHeight: '90%',
+                        overflow: 'auto',
+                        position: 'relative'
+                      }}>
+                        <button onClick={() => setShowSizeGuide(false)} style={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 10,
+                          background: 'none',
+                          border: 'none',
+                          fontSize: '1.2rem',
+                          cursor: 'pointer'
+                        }}>✕</button>
+                        <img
+                          src="/size-guide.png"
+                          alt="Size Guide"
+                          style={{ width: '100%', height: 'auto' }}
+                        />
+
+                      </div>
+                    </div>
+                  )}
+
               </div>
               <div
                 style={{
