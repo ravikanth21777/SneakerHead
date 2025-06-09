@@ -3,9 +3,13 @@ const dotenv = require('dotenv');
 const cors = require('cors');
 const http = require('http');
 const connectDB = require('./config/db');
+const notificationRoutes = require('./routes/notificationRoutes')
+// server.js (after connectDB())
+const startAuctionCloser = require('./jobs/closeAuctions');
 
 dotenv.config();
 connectDB();
+startAuctionCloser();
 
 const app = express();
 app.use(cors());
@@ -13,6 +17,7 @@ app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/products', require('./routes/productRoutes'));
+app.use('/api/notifications', notificationRoutes);
 
 const server = http.createServer(app);
 

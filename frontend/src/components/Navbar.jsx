@@ -4,6 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import AuthModal from './AuthModal';
+import NotificationDropdown from './NotificationDropdown'; // ← import here
 
 const brands = [
   { name: "Adidas", count: 4 },
@@ -86,11 +87,6 @@ const Navbar = ({ onBrandSelect }) => {
     } else {
       setIsAuthModalOpen(true);
     }
-  };
-
-  const handleNotificationsClick = () => {
-    // Navigate to notifications page or open notifications panel
-    navigate('/notifications');
   };
 
   const handleLogout = () => {
@@ -254,18 +250,8 @@ const Navbar = ({ onBrandSelect }) => {
             👤
           </motion.span>
 
-          {/* Notifications Icon (only when logged in) */}
-          {isAuthenticated && (
-            <motion.span
-              whileHover={{ scale: 1.2 }}
-              whileTap={{ scale: 0.95 }}
-              style={{ cursor: 'pointer' }}
-              onClick={handleNotificationsClick}
-              title="Notifications"
-            >
-              🔔
-            </motion.span>
-          )}
+          {/* Notifications Dropdown */}
+          {isAuthenticated && <NotificationDropdown />}
 
           {/* List Item for Auction Icon */}
           <motion.span
