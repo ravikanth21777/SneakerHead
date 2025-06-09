@@ -9,7 +9,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 const OrderSummary = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const token = localStorage.getItem('token'); 
   // loading / error / product
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +22,12 @@ const OrderSummary = () => {
       setIsLoading(true);
       setError(null);
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/products/${id}`);
+        const { data } = await axios.get(`http://localhost:5000/api/products/order-summary/${id}`,{
+          
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        });
         setProduct(data);
         if (data.productPictureUrls?.length) {
           setImages(data.productPictureUrls);
@@ -123,6 +128,7 @@ const OrderSummary = () => {
               <h3 style={{ margin:'0 0 0.5rem 0', fontWeight:600 }}>Seller</h3>
               <p style={{ margin:0 }}>{seller?.username || 'Unknown'}</p>
               <p style={{ margin:0, color:'#666' }}>{seller?.email || ''}</p>
+              <p style={{ margin:0, color:'#666' }}>{seller?.phone || ''}</p>
             </div>
 
             {/* Buyer Info */}
@@ -130,6 +136,7 @@ const OrderSummary = () => {
               <h3 style={{ margin:'0 0 0.5rem 0', fontWeight:600 }}>Buyer</h3>
               <p style={{ margin:0 }}>{buyer?.username || 'Unknown'}</p>
               <p style={{ margin:0, color:'#666' }}>{buyer?.email || ''}</p>
+              <p style={{ margin:0, color:'#666' }}>{buyer?.phone || ''}</p>
             </div>
           </div>
         </div>

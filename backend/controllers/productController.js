@@ -50,6 +50,38 @@ exports.getProductById = async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+//get order summary
+exports.getOrderSummary =async(req,res)=>{
+  try{
+    const productId = req.params.id;
+    const loggedInUserId = req.user._id;
+    const product = await Product.findById(productId)
+      .populate('seller', 'username email phone profilePictureUrl')
+      .populate('buyer', 'username email phone profilePictureUrl');
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const isBuyer = product.buyer && product.buyer._id.toString() === loggedInUserId.toString();
+    const isSeller = product.seller && product.seller._id.toString() === loggedInUserId.toString();
+    const isAuctionEnded = product.auctionEnded || new Date() > product.AuctionEndDate;
+
+    if(!isBuyer && !isSeller) {
+      return res.status(403).json({ message: 'Forbidden: You are not authorized to view this order summary' });
+    }
+    if (!isAuctionEnded) {
+      return res.status(400).json({ message: 'Auction is still ongoing' });
+    }
+    res.json(product);
+
+  }
+  catch (error) {
+    console.error('Error fetching order summary:', error);
+    res.status(500).json({ message: 'Server error while fetching order summary' }); 
+
+}
+};
 // Place a Bid
 exports.placeBid = async (req, res) => {
   try {

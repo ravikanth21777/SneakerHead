@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState('orders');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('bought');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -293,6 +295,7 @@ const Profile = () => {
                     <motion.div
                       key={item._id}
                       whileHover={{ y: -4 }}
+                      onClick={() => navigate(`/order/${item._id}`)}
                       style={{
                         border: '1px solid #eee',
                         borderRadius: '12px',
@@ -342,6 +345,7 @@ const Profile = () => {
                     <motion.div
                       key={item._id}
                       whileHover={{ y: -4 }}
+                      onClick={() => navigate(`/order/${item._id}`)}
                       style={{
                         border: '1px solid #eee',
                         borderRadius: '12px',
