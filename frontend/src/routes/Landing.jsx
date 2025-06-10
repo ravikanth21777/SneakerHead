@@ -358,6 +358,7 @@ const sortedFilteredProducts = sortProducts(filteredProducts, sortBy);
                     AuctionEndDate: sneaker.AuctionEndDate,
                     auctionEnded: sneaker.auctionEnded,
                     isUpdating: sneaker.isUpdating,
+                    productPictureUrls: sneaker.productPictureUrls || [],
                     image:
                       sneaker.productPictureUrls && sneaker.productPictureUrls.length > 0
                         ? sneaker.productPictureUrls[0]

@@ -139,20 +139,49 @@ const ProductCard = memo(({ product }) => {
         background: "#f8f8f8",
         overflow: "hidden"
       }}>
-        <motion.img 
-          src={product.image}
-          alt={product.name}
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover"
-          }}
-          whileHover={{ scale: 1.1 }}
-          transition={{ duration: 0.3 }}
-        />
+        <div
+  style={{
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    overflow: "hidden"
+  }}
+>
+  <motion.img
+    src={product.image}
+    alt={product.name}
+    style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      objectFit: "cover"
+    }}
+    initial={{ opacity: 1 }}
+    whileHover={{ opacity: 0 }}
+    transition={{ duration: 0.5 }}
+  />
+
+  <motion.img
+    src={
+      product.productPictureUrls && product.productPictureUrls[1]
+        ? product.productPictureUrls[1]
+        : product.image // fallback
+    }
+    alt={product.name + ' hover'}
+    style={{
+      position: "absolute",
+      width: "100%",
+      height: "100%",
+      objectFit: "cover"
+    }}
+    initial={{ opacity: 0 }}
+    whileHover={{ opacity: 1 }}
+    transition={{ duration: 0.5 }}
+  />
+</div>
+
       </div>
 
       <div style={{ padding: "1rem" }}>
