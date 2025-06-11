@@ -1,0 +1,42 @@
+:root {
+  --color-primary: #1A1A1A;
+  --color-secondary: #FFFFFF;
+  --color-accent: #FF4444;
+  --color-neutral: #F5F5F5;
+}
+
+body {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+nav, .navbar {
+  background: var(--color-secondary);
+  border-bottom: 1px solid var(--color-neutral);
+}
+
+button, .btn {
+  background: var(--color-accent);
+  color: var(--color-secondary);
+  border: none;
+}
+
+button:focus, .btn:focus {
+  outline: 2px solid var(--color-primary);
+}
+
+.card, .product-card {
+  background: var(--color-neutral);
+  border: 1px solid var(--color-neutral);
+}
+
+a, .link {
+  color: var(--color-accent);
+}
+
+a:hover, .link:hover {
+  color: var(--color-primary);
+}

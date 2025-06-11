@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import io from 'socket.io-client';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
+import '../styles/bold_street.css';
 
 const fadeInUp = {
   initial: { y: 60, opacity: 0 },
@@ -236,11 +237,11 @@ const sortedFilteredProducts = sortProducts(filteredProducts, sortBy);
   };
 
   return (
-    <motion.div
+    <motion.div className="landing"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
-      style={{ minHeight: '100vh', background: '#ffffff' }}
+      
     >
       {/* Navbar */}
       <Navbar onBrandSelect={handleBrandSelection} />

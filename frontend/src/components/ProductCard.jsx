@@ -102,7 +102,7 @@ const ProductCard = memo(({ product }) => {
   };
 
   return (
-    <motion.div
+    <motion.div className="productCard"
       onClick={handleCardClick}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
