@@ -99,22 +99,11 @@ const Navbar = ({ onBrandSelect , onSearch }) => {
 
   return (
     <>
-      <motion.nav
+      <motion.nav className="navbar"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6 }}
-        style={{
-          padding: "1rem 1.2rem",
-          borderBottom: "1px solid #eee",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          background: "#fff",
-          position: "sticky",
-          top: 0,
-          zIndex: 1000,
-          gap: '1rem'
-        }}
+        
       >
         {/* Logo */}
         <motion.h1

@@ -1,0 +1,74 @@
+/* src/styles/urban-night.css */
+
+:root {
+  --color-bg: #121212;
+  --color-surface: #1E1E1E;
+  --color-primary: #BB86FC;
+  --color-secondary: #03DAC6;
+  --color-on-surface: #E0E0E0;
+  --color-on-primary: #121212;
+}
+
+/* Global */
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: var(--color-bg);
+  color: var(--color-on-surface);
+}
+
+/* Navbar */
+.navbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid #333;
+}
+.navbar h1 { color: var(--color-on-surface); }
+
+/* Search */
+.nav-search input {
+  background: #2A2A2A;
+  color: var(--color-on-surface);
+  border: 1px solid #333;
+}
+
+/* Icons */
+.nav-icons span, .nav-icons button {
+  color: var(--color-on-surface);
+}
+
+/* Landing wrapper */
+.landing {
+  background: var(--color-bg);
+}
+
+/* Grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Cards */
+.product-card {
+  background: var(--color-surface);
+  border: 1px solid #333;
+}
+.product-card .brand-tag {
+  background: #333;
+  color: var(--color-on-surface);
+}
+
+/* Buttons */
+.btn-accent {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+.btn-disabled {
+  background: #333;
+  color: #777;
+}
+
+/* Links */
+a { color: var(--color-secondary); }
+a:hover { color: var(--color-primary); }

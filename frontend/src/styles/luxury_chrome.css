@@ -1,0 +1,43 @@
+:root {
+  --color-primary: #0D1117;
+  --color-secondary: #C9D1D9;
+  --color-accent: #A259FF;
+  --color-highlight: #FFD700;
+}
+
+body {
+  background: var(--color-secondary);
+  color: var(--color-primary);
+  font-family: sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+nav, .navbar {
+  background: var(--color-primary);
+  border-bottom: 1px solid var(--color-secondary);
+}
+
+button, .btn {
+  background: var(--color-accent);
+  color: var(--color-secondary);
+  border: none;
+}
+
+button.highlight, .btn-highlight {
+  background: var(--color-highlight);
+  color: var(--color-primary);
+}
+
+.card, .product-card {
+  background: var(--color-secondary);
+  border: 1px solid #AAA;
+}
+
+a, .link {
+  color: var(--color-accent);
+}
+
+a:hover, .link:hover {
+  color: var(--color-highlight);
+}
