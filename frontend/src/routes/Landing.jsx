@@ -24,7 +24,7 @@ const staggerContainer = {
 const Landing = () => {
   // 1️⃣ Track which brands are selected
   const [selectedBrands, setSelectedBrands] = useState([]);
-
+  const [searchQuery, setSearchQuery] = useState('');
   // 2️⃣ State for products, loading, and error
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,34 +55,48 @@ const Landing = () => {
 
 
   // 4️⃣ Fetch live products from backend on component mount
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      setError(null);
+useEffect(() => {
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
 
-      try {
-        const response = await axios.get('http://localhost:5000/api/products');
-        console.log('Fetched products:', response.data);
-        setProducts(response.data);
-      } catch (err) {
-        console.error('Error fetching products:', err);
-        if (err.response) {
-          console.error('Response data:', err.response.data);
-          console.error('Response status:', err.response.status);
-          setError(`Server returned ${err.response.status}`);
-        } else if (err.request) {
-          console.error('No response received:', err.request);
-          setError('No response from server');
-        } else {
-          setError(err.message);
-        }
-      } finally {
-        setLoading(false);
+    try {
+      // Build query params
+      const params = new URLSearchParams();
+
+      if (searchQuery) {
+        params.set('search', searchQuery);
       }
-    };
 
-    fetchProducts();
-  }, []);
+      if (selectedBrands.length > 0) {
+        params.set('brand', selectedBrands.join(','));
+      }
+
+      const url = `http://localhost:5000/api/products?${params.toString()}`;
+      const response = await axios.get(url);
+
+      console.log('Fetched products:', response.data);
+      setProducts(response.data);
+    } catch (err) {
+      console.error('Error fetching products:', err);
+      if (err.response) {
+        console.error('Response data:', err.response.data);
+        console.error('Response status:', err.response.status);
+        setError(`Server returned ${err.response.status}`);
+      } else if (err.request) {
+        console.error('No response received:', err.request);
+        setError('No response from server');
+      } else {
+        setError(err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchProducts();
+}, [searchQuery, selectedBrands]); // ⬅️ re-run whenever search or brand filter changes
+
 
   // Socket effect for real-time updates
   useEffect(() => {
@@ -243,7 +257,10 @@ const sortedFilteredProducts = sortProducts(filteredProducts, sortBy);
       style={{ minHeight: '100vh', background: '#ffffff' }}
     >
       {/* Navbar */}
-      <Navbar onBrandSelect={handleBrandSelection} />
+      <Navbar 
+      onBrandSelect={handleBrandSelection}
+      onSearch={(query)=> setSearchQuery(query)}
+      />
 
       {/* Breadcrumb */}
       <motion.div

@@ -27,6 +27,10 @@ const productSchema  = mongoose.Schema(
             require:[true,'please add some size'],
             enum:['Sneakers', 'Limited Edition', 'Collaboration', 'Vintage', 'Custom'], 
         },
+        edition:{
+            type:String,
+            require:[false,'please add some edition'],
+        },
         startBid:{
             type:Number,
             require:[true,'please add some starting bid'],
@@ -61,10 +65,6 @@ const productSchema  = mongoose.Schema(
             type:String,
             default : '' ,
         }],
-        currentBid: {
-            type: Number,
-            default: 0
-        },
         auctionEnded: {
             type: Boolean,
             default: false

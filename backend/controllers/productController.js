@@ -27,13 +27,42 @@ exports.createProduct = async (req, res) => {
 };
 
 // Get All Active Products
-exports.getProducts = async (req, res) => {
-  const now = new Date();
-  const products = await Product.find({ 
-    AuctionEndDate: { $gt: now },
-    auctionEnded: false
-  });
-  res.json(products);
+// GET /api/products
+ exports.getProducts = async (req, res) => {
+  try {
+    const { search, brand } = req.query;
+
+    let filter = {
+      AuctionEndDate: { $gt: new Date() }, // Only active auctions  
+      auctionEnded: false // Only products that are not ended
+    };
+
+    // Full-text multi-field search
+    if (search) {
+      const searchRegex = { $regex: search, $options: 'i' }; // case-insensitive
+
+      filter.$or = [
+        { name: searchRegex },
+        { description: searchRegex },
+        { brand: searchRegex },
+        { edition: searchRegex },
+        { size: searchRegex },
+        { category: searchRegex },
+      ];
+    }
+
+    // Brand filter (can be multiple brands separated by commas)
+    if (brand) {
+      const brandArray = brand.split(',').map(b => new RegExp(`^${b}$`, 'i')); // exact case-insensitive match
+  filter.brand = { $in: brandArray };
+    }
+
+    const products = await Product.find(filter);
+    res.status(200).json(products);
+  } catch (err) {
+    console.error('Error fetching products:', err);
+    res.status(500).json({ message: 'Server error' });
+  }
 };
 
 // Get Single Product

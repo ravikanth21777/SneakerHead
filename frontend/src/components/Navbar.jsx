@@ -21,7 +21,7 @@ const staggerContainer = {
   }
 };
 
-const Navbar = ({ onBrandSelect }) => {
+const Navbar = ({ onBrandSelect , onSearch }) => {
   const [selectedBrands, setSelectedBrands] = useState([]);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -155,6 +155,15 @@ const Navbar = ({ onBrandSelect }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onFocus={() => setIsSearchFocused(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  if (onSearch) {
+                    onSearch(searchQuery);
+                  }
+                  // setIsSearchFocused(false);
+                }
+              }}
               style={{
                 border: 'none',
                 outline: 'none',
