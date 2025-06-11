@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import { useNavigate } from 'react-router-dom';
 
 const Profile = () => {
-  const [activeTab, setActiveTab] = useState('orders');
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('bought');
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [boughtItems, setBoughtItems] = useState([]);
+  const [soldItems, setSoldItems] = useState([]);
+  const token = localStorage.getItem('token');
 
   const [profileData, setProfileData] = useState({
     username: '',
@@ -20,7 +25,7 @@ const Profile = () => {
 
   useEffect(() => {
     const fetchUserProfile = async () => {
-      const token = localStorage.getItem('token');
+      
       if (!token) {
         setError('User not logged in');
         setLoading(false);
@@ -40,8 +45,24 @@ const Profile = () => {
         setLoading(false);
       }
     };
+    const fetchBoughtItems = async () => {
+    const res = await axios.get('http://localhost:5000/api/products/my-bids', {
+    headers: { Authorization: `Bearer ${token}` }
+     });
+    setBoughtItems(res.data);
+  };
+    const fetchSoldItems = async () => {
+    const res = await axios.get('http://localhost:5000/api/products/my-auctions', {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setSoldItems(res.data);
+  };
+
 
     fetchUserProfile();
+    fetchBoughtItems();
+    fetchSoldItems();
+    // eslint-disable
   }, []);
 
   const handleInputChange = (e) => {
@@ -126,34 +147,7 @@ const Profile = () => {
     document.getElementById('profilePictureInput').click();
   };
 
-  const dummyOrders = [
-    {
-      id: '1',
-      date: '2025-05-20',
-      status: 'Delivered',
-      items: [
-        {
-          name: 'Lionel Messi X Samba Indoor "Spark Gen10s"',
-          price: 13099,
-          image:
-            'https://assets.adidas.com/images/h_840,f_auto,q_auto:sensitive,fl_lossy,c_fill,g_auto/a4b35a2d1c5c46449c51af8b0083847f_9366/Samba_OG_Shoes_White_ID2046_01_standard.jpg'
-        }
-      ]
-    },
-    {
-      id: '2',
-      date: '2025-05-15',
-      status: 'In Transit',
-      items: [
-        {
-          name: 'Nike Air Max 90',
-          price: 9995,
-          image:
-            'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/air-max-90-shoes-N8M7Rb.png'
-        }
-      ]
-    }
-  ];
+  
 
   const tabStyle = (isActive) => ({
     padding: '1rem 2rem',
@@ -267,12 +261,15 @@ const Profile = () => {
         {/* Tabs */}
         <div style={{ borderBottom: '1px solid #eee', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', gap: '1rem' }}>
-            <div
-              onClick={() => setActiveTab('orders')}
-              style={tabStyle(activeTab === 'orders')}
-            >
-              Orders
+            <div onClick={() => setActiveTab('bought')} 
+            style={tabStyle(activeTab === 'bought')}>
+              Items Bought
             </div>
+            <div onClick={() => setActiveTab('sold')} 
+            style={tabStyle(activeTab === 'sold')}>
+              Items Sold
+            </div>
+
             <div
               onClick={() => setActiveTab('settings')}
               style={tabStyle(activeTab === 'settings')}
@@ -283,63 +280,34 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        {activeTab === 'orders' ? (
-          <motion.div
-            initial={{ y: 20, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ duration: 0.4 }}
-          >
-            <h2 style={{ marginBottom: '1.5rem' }}>Order History</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {dummyOrders.map((order) => (
-                <motion.div
-                  key={order.id}
-                  whileHover={{ y: -4 }}
-                  style={{
-                    border: '1px solid #eee',
-                    borderRadius: '12px',
-                    padding: '1.5rem',
-                    background: '#fff'
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      marginBottom: '1rem',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div>
-                      <p style={{ margin: 0, fontWeight: '600' }}>Order #{order.id}</p>
-                      <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
-                        {new Date(order.date).toLocaleDateString()}
-                      </p>
-                    </div>
-                    <span
+        {activeTab === 'bought' && (
+            <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <h2 style={{ marginBottom: '1.5rem' }}>Items Bought</h2>
+              {boughtItems.length === 0 ? (
+                <p>You haven't bought any items yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {boughtItems.map((item) => (
+                    <motion.div
+                      key={item._id}
+                      whileHover={{ y: -4 }}
+                      onClick={() => navigate(`/order/${item._id}`)}
                       style={{
-                        padding: '0.5rem 1rem',
-                        borderRadius: '20px',
-                        background: order.status === 'Delivered' ? '#e8f5e9' : '#fff3e0',
-                        color: order.status === 'Delivered' ? '#2e7d32' : '#ef6c00',
-                        fontSize: '0.9rem'
-                      }}
-                    >
-                      {order.status}
-                    </span>
-                  </div>
-                  {order.items.map((item, index) => (
-                    <div
-                      key={index}
-                      style={{
+                        border: '1px solid #eee',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        background: '#fff',
                         display: 'flex',
-                        gap: '1rem',
-                        padding: '1rem 0',
-                        borderTop: '1px solid #eee'
+                        alignItems: 'center',
+                        gap: '1rem'
                       }}
                     >
                       <img
-                        src={item.image}
+                        src={item.productPictureUrls[0]}
                         alt={item.name}
                         style={{
                           width: '80px',
@@ -351,16 +319,67 @@ const Profile = () => {
                       <div>
                         <p style={{ margin: 0, fontWeight: '500' }}>{item.name}</p>
                         <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
-                          ₹{item.price.toLocaleString()}
+                          ₹{item.currentBid.toLocaleString()}
                         </p>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        ) : (
+                </div>
+              )}
+            </motion.div>
+)}
+
+
+        {activeTab === 'sold' && (
+                    <motion.div
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.4 }}
+            >
+              <h2 style={{ marginBottom: '1.5rem' }}>Items Sold</h2>
+              {soldItems.length === 0 ? (
+                <p>You haven't bought any items yet.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {soldItems.map((item) => (
+                    <motion.div
+                      key={item._id}
+                      whileHover={{ y: -4 }}
+                      onClick={() => navigate(`/order/${item._id}`)}
+                      style={{
+                        border: '1px solid #eee',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        background: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '1rem'
+                      }}
+                    >
+                      <img
+                        src={item.productPictureUrls[0]}
+                        alt={item.name}
+                        style={{
+                          width: '80px',
+                          height: '80px',
+                          objectFit: 'cover',
+                          borderRadius: '8px'
+                        }}
+                      />
+                      <div>
+                        <p style={{ margin: 0, fontWeight: '500' }}>{item.name}</p>
+                        <p style={{ margin: '0.5rem 0 0 0', color: '#666' }}>
+                          ₹{item.currentBid.toLocaleString()}
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+        )}
+
+        {activeTab === 'settings' && (
           <motion.div
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -556,6 +575,7 @@ const Profile = () => {
             </form>
           </motion.div>
         )}
+
       </div>
     </motion.div>
   );

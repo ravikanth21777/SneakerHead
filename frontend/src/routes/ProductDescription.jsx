@@ -43,8 +43,6 @@ const ProductDescription = () => {
     seconds: 0
   });
   const [isWatchlisted, setIsWatchlisted] = useState(false);
-  const [totalBids, setTotalBids] = useState(0);
-  const [watchers, setWatchers] = useState(0);
   const [isAuctionEnded, setIsAuctionEnded] = useState(false);
   const [showSizeGuide, setShowSizeGuide] = useState(false);
 
@@ -61,8 +59,6 @@ const ProductDescription = () => {
 
         setProductData(product);
         setCurrentBid(product.currentBid || product.startBid || 0);
-        setTotalBids(product.bids ? product.bids.length : 0);
-        setWatchers(product.watchersCount || 0);
 
         // Check auction status when product data is loaded
         if (product.auctionEnded || new Date() >= new Date(product.AuctionEndDate)) {
@@ -170,7 +166,6 @@ const ProductDescription = () => {
         
         // Immediate bid amount update for responsiveness
         setCurrentBid(Number(data.currentBid));
-        setTotalBids(prev => prev + 1);
         
         try {
           // Always fetch fresh data to ensure consistency
@@ -298,7 +293,6 @@ const ProductDescription = () => {
         const updatedBid = Number(response.data.currentBid);
         if (!isNaN(updatedBid) && updatedBid > 0) {
           setCurrentBid(updatedBid);
-          setTotalBids(prev => prev + 1);
         }
         
         // Check auction status and handle socket update
@@ -757,19 +751,7 @@ const ProductDescription = () => {
                   </div>
                 </div>
                 <div style={{ textAlign: 'right' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      fontSize: '0.875rem',
-                      color: '#666',
-                      marginBottom: '0.25rem'
-                    }}
-                  >
-                    <Users size={16} style={{ marginRight: '0.25rem' }} />
-                    {totalBids} bids
-                  </div>
-                  <div style={{ fontSize: '0.875rem', color: '#666' }}>{watchers} watching</div>
+                  
                 </div>
               </div>
 
