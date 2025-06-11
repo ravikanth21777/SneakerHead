@@ -1,0 +1,76 @@
+/* src/styles/clean-blue.css */
+
+:root {
+  --color-bg: #F0F8FF;        /* AliceBlue */
+  --color-surface: #FFFFFF;   /* White cards */
+  --color-primary: #1E90FF;   /* DodgerBlue buttons */
+  --color-secondary: #4682B4; /* SteelBlue links */
+  --color-border: #D0E6F8;    /* light border */
+  --color-text: #333333;      /* dark text */
+}
+
+body {
+  margin: 0;
+  font-family: sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+/* Navbar */
+.navbar {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+.navbar h1 {
+  color: var(--color-text);
+}
+
+/* Search */
+.nav-search input {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+/* Icons */
+.nav-icons span,
+.nav-icons button {
+  color: var(--color-text);
+}
+
+/* Landing wrapper */
+.landing {
+  background: var(--color-bg);
+}
+
+/* Grid */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px,1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Cards */
+.product-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+}
+
+/* Buttons */
+.btn-accent {
+  background: var(--color-primary);
+  color: #fff;
+}
+.btn-disabled {
+  background: #ccc;
+  color: #666;
+}
+
+/* Links */
+a {
+  color: var(--color-secondary);
+}
+a:hover {
+  color: var(--color-primary);
+}
