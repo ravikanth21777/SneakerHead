@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import io from 'socket.io-client';
 import ProductCard from '../components/ProductCard';
 import Navbar from '../components/Navbar';
-import '../styles/bold_street.css';
+
 
 const fadeInUp = {
   initial: { y: 60, opacity: 0 },
